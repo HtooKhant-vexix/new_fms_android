@@ -1,5 +1,4 @@
 // import { playbackService } from '@/constants/playbackService'
-import { colors } from '@/constants/tokens'
 // import { useLogTrackPlayerState } from '@/hooks/useLogTrackPlayerState'
 // import { useSetupTrackPlayer } from '@/hooks/useSetupTrackPlayer'
 import { SplashScreen, Stack } from 'expo-router'
