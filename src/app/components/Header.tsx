@@ -1,25 +1,68 @@
-import { Link } from 'expo-router'
+import { colors } from '@/constants/tokens'
+import Ionicons from '@expo/vector-icons/Ionicons'
+import { Link, router } from 'expo-router'
 import React from 'react'
-import { IoHome } from 'react-icons/io5'
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import tw from 'twrnc'
+
+const Route = [
+	{
+		name: 'Home',
+		icon: 'home',
+		route: '/(tabs)/(dispenser)',
+	},
+	{
+		name: 'Voucher',
+		icon: 'file-tray-full',
+		route: '/(tabs)/voucher',
+	},
+	{
+		name: 'Price Change',
+		icon: 'pricetags',
+		route: '/(tabs)/preset',
+	},
+	{
+		name: 'Setting',
+		icon: 'settings',
+		route: '/(tabs)/setting',
+	},
+]
+
+const data = {
+	nozzle: '01',
+	dispenser: '1',
+	voucher: '23/sdfsfsafsf/333',
+}
 
 const Header = () => (
 	<View style={styles.header}>
-		<Link href="/(tabs)/voucher.tsx">
+		<Link href="/(tabs)/authen">
 			<Image
-				source={require('../../../assets/icon.png')} // Replace with your logo
+				source={require('../../../assets/six_logo.png')} // Replace with your logo
 				style={styles.logo}
 			/>
 		</Link>
 		<View style={styles.headerIcons}>
-			<TouchableOpacity style={styles.iconButton}>
-				<Link href="/(tabs)/(dispenser)">
+			{Route.map((e) => (
+				<TouchableOpacity
+					key={e.name}
+					onPress={() => {
+						router.push(e?.route)
+						// router.setParams(data)
+					}}
+					style={tw`bg-[${colors.primary}] px-6 flex flex-row justify-around items-center py-3 gap-2 rounded-md`}
+				>
+					{/* <Link href="/(tabs)/voucher.tsx"> */}
 					{/* <Image source={require('../../../assets/icon.png')} style={styles.icon} /> */}
-					<IoHome />
-					<Text>Dispenser</Text>
-				</Link>
-			</TouchableOpacity>
-			<TouchableOpacity style={styles.iconButton}>
+					<Ionicons name={e?.icon} size={32} style={tw`flex text-white`} />
+					<View>
+						<Text style={tw`text-white text-xl`}>{e?.name}</Text>
+					</View>
+					{/* </Link> */}
+				</TouchableOpacity>
+			))}
+
+			{/* <TouchableOpacity style={styles.iconButton}>
 				<Image source={require('../../../assets/icon.png')} style={styles.icon} />
 			</TouchableOpacity>
 			<TouchableOpacity style={styles.iconButton}>
@@ -27,7 +70,7 @@ const Header = () => (
 			</TouchableOpacity>
 			<TouchableOpacity style={styles.iconButton}>
 				<Image source={require('../../../assets/icon.png')} style={styles.icon} />
-			</TouchableOpacity>
+			</TouchableOpacity> */}
 		</View>
 	</View>
 )
@@ -48,13 +91,15 @@ const styles = StyleSheet.create({
 		height: 110,
 	},
 	logo: {
-		width: 120,
-		height: 40,
+		width: 140,
+		height: 70,
+		// backgroundColor: 'red',
 		resizeMode: 'contain',
 	},
 	headerIcons: {
 		flexDirection: 'row',
-		gap: 16,
+		gap: 20,
+		paddingEnd: 20,
 	},
 	iconButton: {
 		padding: 8,

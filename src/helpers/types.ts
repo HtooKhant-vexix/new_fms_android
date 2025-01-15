@@ -1,0 +1,1 @@
+export type TrackWithPlaylist = Track $ {playList?:string}

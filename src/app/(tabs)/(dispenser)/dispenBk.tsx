@@ -1,18 +1,12 @@
 import Dispenser from '@/app/components/Dispenser'
-import { DevControl, Token } from '@/store/library'
-import { Redirect } from 'expo-router'
+import { getToken } from '@/constants/tokens'
+import { Token } from '@/store/library'
 import React, { useEffect } from 'react'
 import { ImageBackground, SafeAreaView, ScrollView, StyleSheet, View } from 'react-native'
 import backImg from '../../../../assets/bg.png'
 
 export default function DispenserScreen() {
-	const { setToken, items: token } = Token()
-	const { getDev, dev } = DevControl()
-
-	useEffect(() => {
-		getDev(token)
-	}, [])
-	// console.log(dev?.result, 'this is dev')
+	const { setToken, items } = Token()
 
 	const dispensers = [
 		{
@@ -60,42 +54,35 @@ export default function DispenserScreen() {
 		/>
 	))
 
-	// useEffect(() => {
-	// 	if (!items) {
-	// 		const test = getToken()
-	// 		console.log(test, 'this is test')
-	// 	}
-	// }, [])
+	useEffect(() => {
+		const test = getToken()
+		console.log(test, 'this is test')
+	}, [])
 
-	// console.log(items, 'this is token')
+	console.log(items, 'this is token')
 
 	// console.warn(token, 'this is token')
-	if (!token) {
-		return <Redirect href="/login" />
-	} else {
-		return (
-			<SafeAreaView style={styles.container}>
-				<ImageBackground source={backImg} resizeMode="cover" style={styles.image}>
-					<ScrollView horizontal={true} contentContainerStyle={styles.scrollContent}>
-						<View style={styles.grid}>
-							{dev?.result?.map((dispenser: any) => (
-								<Dispenser
-									noz={dispenser?.nozzle_no}
-									dis={dispenser?.dep_no}
-									key={dispenser?._id}
-									title={dispenser?.fuel_type}
-									description={dispenser?.description}
-									iconSource={dispenser?.iconSource}
-									price={dispenser?.daily_price}
-									status={dispenser?.status}
-								/>
-							))}
-						</View>
-					</ScrollView>
-				</ImageBackground>
-			</SafeAreaView>
-		)
-	}
+
+	return (
+		<SafeAreaView style={styles.container}>
+			<ImageBackground source={backImg} resizeMode="cover" style={styles.image}>
+				<ScrollView horizontal={true} contentContainerStyle={styles.scrollContent}>
+					<View style={styles.grid}>
+						{dispensers.map((dispenser) => (
+							<Dispenser
+								key={dispenser?.id}
+								title={dispenser?.title}
+								description={dispenser?.description}
+								iconSource={dispenser?.iconSource}
+								price={dispenser?.price}
+								status={dispenser?.status}
+							/>
+						))}
+					</View>
+				</ScrollView>
+			</ImageBackground>
+		</SafeAreaView>
+	)
 }
 
 const styles = StyleSheet.create({

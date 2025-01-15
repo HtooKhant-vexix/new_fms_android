@@ -1,12 +1,14 @@
 // import { playbackService } from '@/constants/playbackService'
 // import { useLogTrackPlayerState } from '@/hooks/useLogTrackPlayerState'
 // import { useSetupTrackPlayer } from '@/hooks/useSetupTrackPlayer'
-import { SplashScreen, Stack } from 'expo-router'
+import { SplashScreen, Stack, usePathname } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
+import { PaperProvider } from 'react-native-paper'
 // import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
+import Header from './components/Header'
 // import TrackPlayer from 'react-native-track-player'
-
+// import '../styles/config.css'
 SplashScreen.preventAutoHideAsync()
 
 // TrackPlayer.registerPlaybackService(() => playbackService)
@@ -22,12 +24,17 @@ const App = () => {
 
 	// useLogTrackPlayerState()
 
+	const location = usePathname()
+
 	return (
 		<SafeAreaProvider>
-			{/* <GestureHandlerRootView style={{ flex: 1 }}> */}
-			<RootNavigation />
-
-			<StatusBar style="auto" />
+			<PaperProvider>
+				{/* <GestureHandlerRootView style={{ flex: 1 }}> */}
+				{location == '/login' ? null : <Header />}
+				{/* <Header /> */}
+				<RootNavigation />
+				<StatusBar hidden />
+			</PaperProvider>
 			{/* </GestureHandlerRootView> */}
 		</SafeAreaProvider>
 	)

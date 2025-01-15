@@ -37,24 +37,6 @@ const DispenserLayout = () => {
 						headerShown: false,
 					}}
 				/>
-				<Stack.Screen
-					name="auth"
-					options={{
-						headerShown: false,
-					}}
-				/>
-				<Stack.Screen
-					name="fail"
-					options={{
-						headerShown: false,
-					}}
-				/>
-				<Stack.Screen
-					name="login"
-					options={{
-						headerShown: false,
-					}}
-				/>
 			</Stack>
 		</View>
 	)
