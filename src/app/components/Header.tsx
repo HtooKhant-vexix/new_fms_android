@@ -1,4 +1,5 @@
 import { colors } from '@/constants/tokens'
+import { Token, useStore } from '@/store/library'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { Link, router } from 'expo-router'
 import React from 'react'
@@ -16,11 +17,11 @@ const Route = [
 		icon: 'file-tray-full',
 		route: '/(tabs)/voucher',
 	},
-	{
-		name: 'Price Change',
-		icon: 'pricetags',
-		route: '/(tabs)/preset',
-	},
+	// {
+	// 	name: 'Price Change',
+	// 	icon: 'pricetags',
+	// 	route: '/(tabs)/preset',
+	// },
 	{
 		name: 'Setting',
 		icon: 'settings',
@@ -34,46 +35,59 @@ const data = {
 	voucher: '23/sdfsfsafsf/333',
 }
 
-const Header = () => (
-	<View style={styles.header}>
-		<Link href="/(tabs)/authen">
-			<Image
-				source={require('../../../assets/six_logo.png')} // Replace with your logo
-				style={styles.logo}
-			/>
-		</Link>
-		<View style={styles.headerIcons}>
-			{Route.map((e) => (
-				<TouchableOpacity
-					key={e.name}
-					onPress={() => {
-						router.push(e?.route)
-						// router.setParams(data)
-					}}
-					style={tw`bg-[${colors.primary}] px-6 flex flex-row justify-around items-center py-3 gap-2 rounded-md`}
-				>
-					{/* <Link href="/(tabs)/voucher.tsx"> */}
-					{/* <Image source={require('../../../assets/icon.png')} style={styles.icon} /> */}
-					<Ionicons name={e?.icon} size={32} style={tw`flex text-white`} />
-					<View>
-						<Text style={tw`text-white text-xl`}>{e?.name}</Text>
-					</View>
-					{/* </Link> */}
-				</TouchableOpacity>
-			))}
+let start = new Date()
+start.setHours(0)
+start.setMinutes(0)
+start.setSeconds(0)
+start = new Date(start)
 
-			{/* <TouchableOpacity style={styles.iconButton}>
-				<Image source={require('../../../assets/icon.png')} style={styles.icon} />
-			</TouchableOpacity>
-			<TouchableOpacity style={styles.iconButton}>
-				<Image source={require('../../../assets/icon.png')} style={styles.icon} />
-			</TouchableOpacity>
-			<TouchableOpacity style={styles.iconButton}>
-				<Image source={require('../../../assets/icon.png')} style={styles.icon} />
-			</TouchableOpacity> */}
+let end = new Date()
+end.setHours(23)
+end.setMinutes(59)
+end.setSeconds(59)
+end = new Date(end)
+
+const Header = () => {
+	const { items, isLoading, error, fetchItems } = useStore()
+	const { items: token } = Token()
+
+	const route = `detail-sale/pagi/by-date/1?sDate=${start}&eDate=${end}`
+
+	return (
+		<View style={styles.header}>
+			<Link href="/(tabs)/authen">
+				<View style={tw`flex flex-row items-center gap-2`}>
+					<Image
+						source={require('../../../assets/six_logo.png')} // Replace with your logo
+						style={styles.logo}
+					/>
+					<Text style={tw`text-[45px] ml-[-25px] mb-[-15px] font-bold text-[${colors.primary}]`}>
+						Sixth Kendra
+					</Text>
+				</View>
+			</Link>
+			<View style={styles.headerIcons}>
+				{Route.map((e) => (
+					<TouchableOpacity
+						key={e.name}
+						onPress={() => {
+							router.push(e?.route)
+							if (e.name === 'Voucher') {
+								fetchItems(route, token)
+							}
+						}}
+						style={tw`bg-[${colors.primary}] px-6 flex flex-row justify-around items-center py-3 gap-2 rounded-md`}
+					>
+						<Ionicons name={e?.icon} size={32} style={tw`flex text-white`} />
+						<View>
+							<Text style={tw`text-white text-xl`}>{e?.name}</Text>
+						</View>
+					</TouchableOpacity>
+				))}
+			</View>
 		</View>
-	</View>
-)
+	)
+}
 
 const styles = StyleSheet.create({
 	container: {

@@ -3,12 +3,8 @@ import React from 'react'
 import { Text, TouchableOpacity, View } from 'react-native'
 import tw from 'twrnc'
 
-const ControlButton = ({ preset, reset, start, clear }) => {
+const ControlButton = ({ preset, start, clear }) => {
 	const data = [
-		{
-			name: 'Rest',
-			fun: reset,
-		},
 		{
 			name: 'Clear',
 			fun: clear,

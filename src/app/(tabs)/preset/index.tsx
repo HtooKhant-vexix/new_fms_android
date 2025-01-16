@@ -2,11 +2,13 @@ import ControlButton from '@/app/components/ControlButton'
 import FunctionKey from '@/app/components/FunctionKey'
 import Input from '@/app/components/Input'
 import NumberKeyboard from '@/app/components/NumberKeyboard'
+import { colors } from '@/constants/tokens'
 import { DevControl, Token } from '@/store/library'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useGlobalSearchParams, useLocalSearchParams } from 'expo-router'
 import React, { useEffect, useState } from 'react'
-import { ImageBackground, SafeAreaView, StyleSheet, View } from 'react-native'
+import { ImageBackground, SafeAreaView, StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator, Modal, Portal } from 'react-native-paper'
 import tw from 'twrnc'
 import backImg from '../../../../assets/bg.png'
 
@@ -20,39 +22,21 @@ const index = () => {
 	const [type, setType] = useState<string>('')
 	const [isKeyboardVisible, setIsKeyboardVisible] = useState(false)
 
-	const { presetFun, error: e, dev } = DevControl()
-
-	// console.log(glob, 'this is glob', price)
+	const { presetFun, error: e, dev, presetLoading, permitLoading, permitFun } = DevControl()
 
 	const handleKeyPressLiter = (key: string) => {
 		if (key === 'delete') {
 			setLiter((prev) => prev.slice(0, -1))
 		} else {
 			setLiter((prev) => prev + key)
-			// setPrice((prev) => ((prev + key) * Number(glob?.price)).toString())
 		}
 	}
-
-	// const dailyPrice = FuelType?.map((item) => {
-	// 	const data = dev?.result
-	// 	const unitPrice = data.filter((unit) => unit.fuel_type == item)[0]?.daily_price
-	// 	return {
-	// 		FuelType: item,
-	// 		price: unitPrice,
-	// 	}
-	// })
-
-	// const pricePerLiter = dev?.result?.filter((unit) => unit.fuel_type == glob?.fuel)[0]?.daily_price
-
-	// console.log(dailyPrice, 'this is daily price', pricePerLiter)
 
 	const handleKeyPressPrice = (key: string) => {
 		if (key === 'delete') {
 			setPrice((prev) => prev.slice(0, -1))
 		} else {
 			setPrice((prev) => prev + key)
-			// console.log(Number(glob?.price), 'this is price', liter)
-			// setLiter((prev) => ((prev + key) / Number(glob?.price)).toString())
 		}
 	}
 
@@ -60,21 +44,15 @@ const index = () => {
 		setIsKeyboardVisible(!isKeyboardVisible)
 	}
 
-	// console.log(glob, local)
-
 	const { items: token } = Token()
 
 	const FuelType = ['005-Premium Diesel', '004-Diesel', '001-Octane Ron(92)', '002-Octane Ron(95)']
 
 	useEffect(() => {
-		try {
-			const dataGet = async () => {
+		const dataGet = async () => {
+			try {
 				const jsonValue = await AsyncStorage.getItem('FnKey')
-				// console.log(JSON.parse(jsonValue), 'this is json value')
-
 				const data = JSON.parse(jsonValue)
-				// console.log(data[2], 'this is data')
-
 				if (jsonValue) {
 					setFunData(data)
 				} else {
@@ -97,12 +75,11 @@ const index = () => {
 						},
 					})
 				}
+			} catch (e) {
+				console.log(e, 'this is error from useEffect')
 			}
-			dataGet()
-			// getCurrentLocation()
-		} catch (e) {
-			console.log(e, 'this is error from useEffect')
 		}
+		dataGet()
 	}, [])
 
 	const literData = {
@@ -131,17 +108,35 @@ const index = () => {
 
 	const handlePreset = () => {
 		const route = `detail-sale/preset?depNo=${glob?.dis}&nozzleNo=${glob?.noz}`
-		// if (priceData) {
 		presetFun(route, priceData, token)
 		setPrice('')
 		setLiter('')
-		// } else {
-		// presetFun(route, literData, token)
-		// }
+	}
+
+	useEffect(() => {
+		if (presetLoading) {
+			showModal()
+		} else {
+			hideModal()
+		}
+	}, [presetLoading])
+
+	const containerStyle = { backgroundColor: 'white', padding: 20 }
+
+	const permitObj = {
+		nozzleNo: glob?.noz,
+		fuelType: glob?.fuel,
+		carNo: glob?.number,
+		vehicleType: glob?.category,
+		cashType: glob?.payment,
+		device: 'android module',
 	}
 
 	const handleStart = () => {
-		console.log('start')
+		const route = `detail-sale?depNo=${glob?.dis}&nozzleNo=${glob?.noz}`
+		permitFun(route, permitObj, token)
+		setPrice('')
+		setLiter('')
 	}
 
 	const handleReset = () => {
@@ -149,26 +144,9 @@ const index = () => {
 	}
 
 	const handleClear = () => {
-		console.log('clear')
+		setLiter('')
+		setPrice('')
 	}
-
-	// {
-	//       nozzleNo: obj.nozzle_no,
-	//       fuelType: obj.fuel_type,
-	//       liter: parseFloat(premitFormInfo.value).toFixed(2),
-	//       carNo: !premitFormInfo.carNo == "" ? premitFormInfo.carNo : "-",
-	//       vehicleType: premitFormInfo.vehicleType,
-	//       cashType: premitFormInfo.cashType,
-	//       salePrice: obj.daily_price,
-	//       device: "website",
-	//       cusCardId: premitFormInfo.cusCardId
-	//     },
-	//     {
-	//       headers: {
-	//         Authorization: "Bearer " + token,
-	//         "Content-Type": "multipart/form-data", // Adjust content type based on your API requirements
-	//       },
-	//     }
 
 	const funKeyHandler = (index: number, field: string) => {
 		console.log(funData[index], 'this is index and field')
@@ -181,6 +159,11 @@ const index = () => {
 			setPrice((Number(data?.liter) * Number(glob?.price)).toString())
 		}
 	}
+
+	const [visible, setVisible] = React.useState(false)
+
+	const showModal = () => setVisible(true)
+	const hideModal = () => setVisible(false)
 
 	return (
 		<SafeAreaView style={styles.container}>
@@ -210,22 +193,15 @@ const index = () => {
 						/>
 					</View>
 					<View>
-						<ControlButton
-							preset={handlePreset}
-							start={handleStart}
-							reset={handleReset}
-							clear={handleClear}
-						/>
+						<ControlButton preset={handlePreset} start={handleStart} clear={handleClear} />
 					</View>
 				</View>
-				{/* <Keyboard /> */}
 				<NumberKeyboard
 					isVisible={isKeyboardVisible}
 					literValue={liter}
 					priceValue={price}
 					onKeyPress={condi == 'liter' ? handleKeyPressLiter : handleKeyPressPrice}
 					condi={condi}
-					// , setLiter((price / Number(glob?.price)).toString())
 					onClose={() => {
 						if (type === 'liter') {
 							setIsKeyboardVisible(false),
@@ -236,6 +212,18 @@ const index = () => {
 						}
 					}}
 				/>
+				<Portal>
+					<Modal
+						visible={visible}
+						onDismiss={hideModal}
+						contentContainerStyle={tw`bg-white flex mx-auto rounded-lg`}
+					>
+						<View style={tw`flex justify-center items-center p-20`}>
+							<ActivityIndicator animating={true} size={100} color={colors.primary} />
+							<Text style={tw`text-4xl mt-6`}>Please wait ....</Text>
+						</View>
+					</Modal>
+				</Portal>
 			</ImageBackground>
 		</SafeAreaView>
 	)

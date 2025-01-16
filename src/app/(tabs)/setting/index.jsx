@@ -4,7 +4,7 @@ import { colors } from '@/constants/tokens'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import * as Location from 'expo-location'
 import { router, useGlobalSearchParams, useLocalSearchParams, usePathname } from 'expo-router'
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import {
 	ImageBackground,
 	SafeAreaView,
@@ -13,6 +13,7 @@ import {
 	TouchableOpacity,
 	View,
 } from 'react-native'
+import { ActivityIndicator } from 'react-native-paper'
 import tw from 'twrnc'
 import backImg from '../../../../assets/bg.png'
 
@@ -24,7 +25,7 @@ const AuthComponent = () => {
 	const [isKeyboardVisible, setIsKeyboardVisible] = useState(false)
 	const [condi, setCondi] = useState(false)
 
-	const storeFun = async (value) => {
+	const storeFun = useCallback(async (value) => {
 		try {
 			const jsonValue = JSON.stringify(value)
 			await AsyncStorage.setItem('FnKey', jsonValue)
@@ -32,7 +33,7 @@ const AuthComponent = () => {
 		} catch (e) {
 			console.log(e, 'this is error')
 		}
-	}
+	}, [])
 
 	const [receivedData, setReceivedData] = useState('')
 	const [location, setLocation] = useState(null)
@@ -40,36 +41,42 @@ const AuthComponent = () => {
 	const [cardIndex, setCardIndex] = useState()
 	const [cardField, setCardField] = useState()
 
-	const handleDataReceived = (data) => {
-		if (test == '/auth') {
-			setReceivedData(data)
-			router.push('/(tabs)/info')
-		}
-	}
+	const handleDataReceived = useCallback(
+		(data) => {
+			if (test == '/auth') {
+				setReceivedData(data)
+				router.push('/(tabs)/info')
+			}
+		},
+		[test],
+	)
 
-	const handleKeyPressLiter = (key) => {
+	const handleKeyPressLiter = useCallback((key) => {
 		if (key === 'delete') {
 			setLiter((prev) => prev.slice(0, -1))
 		} else {
 			setLiter((prev) => prev + key)
 		}
-	}
+	}, [])
 
-	const handleKeyPressPrice = (key) => {
+	const handleKeyPressPrice = useCallback((key) => {
 		if (key === 'delete') {
 			setPrice((prev) => prev.slice(0, -1))
 		} else {
 			setPrice((prev) => prev + key)
 		}
-	}
+	}, [])
 
-	const handleKeyPress = (key) => {
-		if (key === 'delete') {
-			deleteData(cardIndex, cardField)
-		} else {
-			updateData(cardIndex, cardField, key)
-		}
-	}
+	const handleKeyPress = useCallback(
+		(key) => {
+			if (key === 'delete') {
+				deleteData(cardIndex, cardField)
+			} else {
+				updateData(cardIndex, cardField, key)
+			}
+		},
+		[cardIndex, cardField],
+	)
 
 	useEffect(() => {
 		async function getCurrentLocation() {
@@ -125,11 +132,11 @@ const AuthComponent = () => {
 	const [price, setPrice] = useState('3000')
 	const [funData, setFunData] = useState()
 
-	const toggleKeyboard = () => {
+	const toggleKeyboard = useCallback(() => {
 		setIsKeyboardVisible(!isKeyboardVisible)
-	}
+	}, [isKeyboardVisible])
 
-	const updateData = (key, field, newValue) => {
+	const updateData = useCallback((key, field, newValue) => {
 		if (field === 'liter') {
 			setFunData((prevData) => ({
 				...prevData,
@@ -149,9 +156,9 @@ const AuthComponent = () => {
 				},
 			}))
 		}
-	}
+	}, [])
 
-	const deleteData = (key, field) => {
+	const deleteData = useCallback((key, field) => {
 		if (field == 'liter') {
 			setFunData((prevData) => ({
 				...prevData,
@@ -171,14 +178,36 @@ const AuthComponent = () => {
 				},
 			}))
 		}
-	}
+	}, [])
 
 	return (
 		<SafeAreaView style={styles.container}>
 			<ImageBackground source={backImg} resizeMode="cover" style={styles.image}>
 				<View style={styles.card}>
-					{funData && (
-						<View style={tw`flex justify-center flex-row items-center gap-20 py-4`}>
+					<View style={tw` p-4 flex flex-col gap-3 mr-4`}>
+						<TouchableOpacity
+							onPress={() => router.push(`/(tabs)/setting`)}
+							style={tw`flex flex-row w-33  items-start`}
+						>
+							<Text
+								style={tw`text-[20px] font-semibold rounded-md bg-[${colors.primary}] w-full text-center py-4 text-white`}
+							>
+								FN KEY
+							</Text>
+						</TouchableOpacity>
+						<TouchableOpacity
+							onPress={() => router.push(`/(tabs)/setting/info`)}
+							style={tw`flex flex-row w-33  items-start`}
+						>
+							<Text
+								style={tw`text-[20px] font-semibold rounded-md bg-[${colors.primary}] w-full text-center py-4 text-white`}
+							>
+								INFO
+							</Text>
+						</TouchableOpacity>
+					</View>
+					{funData ? (
+						<View style={tw`flex justify-center flex-row items-center gap-8 py-4`}>
 							<View>
 								{[...Array(4)].map((e, index) => (
 									<FunCard
@@ -201,6 +230,10 @@ const AuthComponent = () => {
 							>
 								<Text style={tw`mx-auto text-[30px] text-white font-semibold`}>Save</Text>
 							</TouchableOpacity>
+						</View>
+					) : (
+						<View style={tw`flex justify-center w-[80%] flex-row items-center p-20`}>
+							<ActivityIndicator animating={true} size={100} color={colors.primary} />
 						</View>
 					)}
 				</View>
@@ -237,7 +270,9 @@ const styles = StyleSheet.create({
 			height: 2,
 		},
 		marginHorizontal: 'auto',
-		width: 950,
+		width: 1040,
+		display: 'flex',
+		flexDirection: 'row',
 		shadowOpacity: 0.25,
 		shadowRadius: 3.84,
 		elevation: 5,

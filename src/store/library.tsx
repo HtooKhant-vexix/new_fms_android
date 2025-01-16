@@ -62,26 +62,42 @@ const useStore = create((set) => ({
 const DevControl = create((set) => ({
 	dev: [],
 	vou: [],
+	presetLoading: false,
+	permitLoading: false,
 	isLoading: false,
 	error: null,
 
 	// Fetch items from API
 	// `detail-sale/preset?depNo=${obj.dep_no}&nozzleNo=${obj.nozzle_no}`
 	presetFun: async (route: string, data: any, token: string) => {
-		set({ isLoading: true, error: null })
+		set({ presetLoading: true, error: null })
 		try {
-			console.log(data, 'this is data', token)
 			const response = await localInstance.post(route, data, {
 				headers: {
 					Authorization: 'Bearer ' + token,
 					'Content-Type': 'multipart/form-data',
 				},
 			})
-
-			set({ vou: response.data, isLoading: false })
+			set({ vou: response.data, presetLoading: false })
 			router.push('/(tabs)/(dispenser)')
 		} catch (error) {
-			set({ error, isLoading: false })
+			set({ error, presetLoading: false })
+		}
+	},
+
+	permitFun: async (route: string, data: any, token: string) => {
+		set({ presetLoading: true, error: null })
+		try {
+			const response = await localInstance.post(route, data, {
+				headers: {
+					Authorization: 'Bearer ' + token,
+					'Content-Type': 'multipart/form-data',
+				},
+			})
+			set({ vou: response.data, presetLoading: false })
+			router.push('/(tabs)/(dispenser)')
+		} catch (error) {
+			set({ error, presetLoading: false })
 		}
 	},
 

@@ -1,13 +1,13 @@
 import Voucher from '@/app/components/Voucher'
 import { Token, useStore } from '@/store/library'
 import { utilsStyles } from '@/styles'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import React, { useEffect, useState } from 'react'
 import { FlatList, View } from 'react-native'
 import SerialPortAPI from 'react-native-serial-port-api'
 import tw from 'twrnc'
 
 const Index = () => {
-	const { items, isLoading, error, fetchItems } = useStore()
 	let start = new Date()
 	start.setHours(0)
 	start.setMinutes(0)
@@ -20,7 +20,45 @@ const Index = () => {
 	end.setSeconds(59)
 	end = new Date(end)
 
+	const { items, isLoading, error, fetchItems } = useStore()
 	const { items: token } = Token()
+
+	const [name, setName] = React.useState('')
+	const [address, setAddress] = React.useState('')
+	const [city, setCity] = React.useState('')
+	const [state, setState] = React.useState('')
+	const [phoneOne, setPhone1] = React.useState('')
+	const [phoneTwo, setPhone2] = React.useState('')
+
+	useEffect(() => {
+		try {
+			const dataGet = async () => {
+				const jsonValue = await AsyncStorage.getItem('info')
+				console.log(JSON.parse(jsonValue), 'this is json value')
+
+				const data = JSON.parse(jsonValue)
+
+				if (jsonValue) {
+					setName(data?.name)
+					setAddress(data?.address)
+					setCity(data?.city)
+					setState(data?.state)
+					setPhone1(data?.phone1)
+					setPhone2(data?.phone2)
+				} else {
+					setName('')
+					setAddress('')
+					setCity('')
+					setState('')
+					setPhone1('')
+					setPhone2('')
+				}
+			}
+			dataGet()
+		} catch (e) {
+			console.log(e, 'this is error from useEffect')
+		}
+	}, [])
 
 	const route = `detail-sale/pagi/by-date/1?sDate=${start}&eDate=${end}`
 
@@ -89,11 +127,10 @@ const Index = () => {
 				baudRate: 9600,
 			})
 
-			const stationName = convertToHex('Kyawsan(027) - Nyaung Tone')
-			const location = convertToHex('KywalTatSone, Shan,')
-			const location2 = convertToHex('East, Myanmar')
-			const phone1 = convertToHex('09123456789')
-			const phone2 = convertToHex('09123456789')
+			const stationName = convertToHex(name)
+			const location = convertToHex(`${address}, ${city}, ${state}`)
+			const phone1 = convertToHex(phoneOne)
+			const phone2 = convertToHex(phoneTwo)
 			const date = convertToHex(data?.dailyReportDate.toString())
 			const time = convertToHex(data?.createAt.slice(11, 19).toString())
 			const noz = convertToHex(data?.nozzleNo)
@@ -105,7 +142,6 @@ const Index = () => {
 
 			await serialPort.send(`1B401B6101${stationName}0A`)
 			await serialPort.send(`${location}0A`)
-			await serialPort.send(`${location2}0A`)
 			await serialPort.send(`${phone1}2C20${phone2}0A`)
 			await serialPort.send('1B6100')
 			await serialPort.send('2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D0A')
