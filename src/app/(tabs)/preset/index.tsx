@@ -22,7 +22,7 @@ const index = () => {
 	const [type, setType] = useState<string>('')
 	const [isKeyboardVisible, setIsKeyboardVisible] = useState(false)
 
-	const { presetFun, error: e, dev, presetLoading, permitLoading, permitFun } = DevControl()
+	const { presetFun, error: e, dev, presetLoading, permitLoading, permitFun, alert } = DevControl()
 
 	const handleKeyPressLiter = (key: string) => {
 		if (key === 'delete') {
@@ -116,8 +116,10 @@ const index = () => {
 	useEffect(() => {
 		if (presetLoading) {
 			showModal()
+			// setSnackVisible(true)
 		} else {
 			hideModal()
+			// setSnackVisible(false)
 		}
 	}, [presetLoading])
 
@@ -147,6 +149,8 @@ const index = () => {
 		setLiter('')
 		setPrice('')
 	}
+
+	console.log(presetLoading, 'presetLoading')
 
 	const funKeyHandler = (index: number, field: string) => {
 		console.log(funData[index], 'this is index and field')
@@ -212,18 +216,20 @@ const index = () => {
 						}
 					}}
 				/>
-				<Portal>
-					<Modal
-						visible={visible}
-						onDismiss={hideModal}
-						contentContainerStyle={tw`bg-white flex mx-auto rounded-lg`}
-					>
-						<View style={tw`flex justify-center items-center p-20`}>
-							<ActivityIndicator animating={true} size={100} color={colors.primary} />
-							<Text style={tw`text-4xl mt-6`}>Please wait ....</Text>
-						</View>
-					</Modal>
-				</Portal>
+				{presetLoading && (
+					<Portal>
+						<Modal
+							visible={visible}
+							onDismiss={hideModal}
+							contentContainerStyle={tw`bg-white flex mx-auto rounded-lg`}
+						>
+							<View style={tw`flex justify-center items-center p-20`}>
+								<ActivityIndicator animating={true} size={100} color={colors.primary} />
+								<Text style={tw`text-4xl mt-6`}>Please wait ....</Text>
+							</View>
+						</Modal>
+					</Portal>
+				)}
 			</ImageBackground>
 		</SafeAreaView>
 	)

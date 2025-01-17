@@ -66,7 +66,7 @@ export default function DispenserScreen() {
 	return (
 		<SafeAreaView style={styles.container}>
 			<ImageBackground source={backImg} resizeMode="cover" style={styles.image}>
-				<ScrollView horizontal={true} contentContainerStyle={styles.scrollContent}>
+				<ScrollView contentContainerStyle={styles.scrollContent}>
 					<View style={styles.grid}>
 						{dispensers.map((dispenser) => (
 							<Dispenser

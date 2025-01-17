@@ -66,11 +66,12 @@ const DevControl = create((set) => ({
 	permitLoading: false,
 	isLoading: false,
 	error: null,
+	alert: false,
 
 	// Fetch items from API
 	// `detail-sale/preset?depNo=${obj.dep_no}&nozzleNo=${obj.nozzle_no}`
 	presetFun: async (route: string, data: any, token: string) => {
-		set({ presetLoading: true, error: null })
+		set({ presetLoading: true, error: null, alert: false })
 		try {
 			const response = await localInstance.post(route, data, {
 				headers: {
@@ -78,15 +79,18 @@ const DevControl = create((set) => ({
 					'Content-Type': 'multipart/form-data',
 				},
 			})
-			set({ vou: response.data, presetLoading: false })
+			set({ vou: response.data, presetLoading: false, alert: true })
 			router.push('/(tabs)/(dispenser)')
+			setTimeout(() => {
+				set({ alert: false })
+			}, 3000)
 		} catch (error) {
 			set({ error, presetLoading: false })
 		}
 	},
 
 	permitFun: async (route: string, data: any, token: string) => {
-		set({ presetLoading: true, error: null })
+		set({ presetLoading: true, error: null, alert: false })
 		try {
 			const response = await localInstance.post(route, data, {
 				headers: {
@@ -94,8 +98,11 @@ const DevControl = create((set) => ({
 					'Content-Type': 'multipart/form-data',
 				},
 			})
-			set({ vou: response.data, presetLoading: false })
+			set({ vou: response.data, presetLoading: false, alert: true })
 			router.push('/(tabs)/(dispenser)')
+			setTimeout(() => {
+				set({ alert: false })
+			}, 3000)
 		} catch (error) {
 			set({ error, presetLoading: false })
 		}

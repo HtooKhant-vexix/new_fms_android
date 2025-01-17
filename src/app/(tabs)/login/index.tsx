@@ -35,11 +35,11 @@ const LoginComponent = () => {
 	useEffect(() => {
 		const setupSerialPort = async () => {
 			try {
-				console.log('start pro')
+				// console.log('start pro')
 				const serialPort = await SerialPortAPI.open('/dev/ttyS8', {
 					baudRate: 9600,
 				})
-				console.log('serial port open', serialPort)
+				// console.log('serial port open', serialPort)
 
 				// console.log(serialPort);
 				// Check if the serial port is open

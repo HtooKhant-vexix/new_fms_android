@@ -31,18 +31,18 @@ const LoginComponent = () => {
 	useEffect(() => {
 		const setupSerialPort = async () => {
 			try {
-				console.log('start pro')
+				// console.log('start pro')
 				const port = await SerialPortAPI.open('/dev/ttyS8', {
 					baudRate: 9600,
 				})
-				console.log('serial port open', port)
+				// console.log('serial port open', port)
 
 				// console.log(port);
 				// Check if the serial port is open
 				if (port && test == '/login') {
 					// console.log("Serial port is open");
 					// Subscribe to received data
-					console.log('port was opened')
+					// console.log('port was opened')
 					const subscription = port.onReceived(async (buff) => {
 						console.log('====================================')
 						console.log(buff.toString('ascii'))
@@ -113,9 +113,6 @@ const LoginComponent = () => {
 	const local = useLocalSearchParams()
 
 	const test = usePathname()
-	console.log(test, 'location')
-
-	// console.log('Local:', local, 'Global:', glob)
 
 	// const { items, isLoading, error, authPost } = Auth()
 

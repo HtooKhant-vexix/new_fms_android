@@ -1,9 +1,11 @@
 import Voucher from '@/app/components/Voucher'
+import { colors } from '@/constants/tokens'
 import { Token, useStore } from '@/store/library'
 import { utilsStyles } from '@/styles'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import React, { useEffect, useState } from 'react'
 import { FlatList, View } from 'react-native'
+import { ActivityIndicator } from 'react-native-paper'
 import SerialPortAPI from 'react-native-serial-port-api'
 import tw from 'twrnc'
 
@@ -167,18 +169,27 @@ const Index = () => {
 
 	return (
 		<View style={tw`px-6 py-2`}>
-			<FlatList
-				data={items?.result}
-				contentContainerStyle={{ paddingTop: 10, paddingBottom: 128 }}
-				ListFooterComponent={ItemDivider}
-				ItemSeparatorComponent={ItemDivider}
-				keyExtractor={(item, index) => `key-${index}`}
-				renderItem={({ item: track }) => (
-					<View>
-						<Voucher onClick={() => sentBtn(track)} data={track} />
-					</View>
-				)}
-			/>
+			{items?.result ? (
+				<FlatList
+					data={items?.result}
+					contentContainerStyle={{ paddingTop: 10, paddingBottom: 128 }}
+					ListFooterComponent={ItemDivider}
+					ItemSeparatorComponent={ItemDivider}
+					keyExtractor={(item, index) => `key-${index}`}
+					renderItem={({ item: track }) => (
+						<View>
+							<Voucher onClick={() => sentBtn(track)} data={track} />
+						</View>
+					)}
+				/>
+			) : (
+				<ActivityIndicator
+					animating={true}
+					style={tw`mt-[200px]`}
+					size={80}
+					color={colors.primary}
+				/>
+			)}
 		</View>
 	)
 }

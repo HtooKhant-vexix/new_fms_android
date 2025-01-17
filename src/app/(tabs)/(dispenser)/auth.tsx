@@ -36,11 +36,11 @@ const AuthComponent = () => {
 	useEffect(() => {
 		const setupSerialPort = async () => {
 			try {
-				console.log('start pro')
+				// console.log('start pro')
 				const port = await SerialPortAPI.open('/dev/ttyS8', {
 					baudRate: 9600,
 				})
-				console.log('serial port open', port)
+				// console.log('serial port open', port)
 				// console.log(port);
 				// Check if the serial port is open
 				if (port && test == '/auth') {
@@ -119,9 +119,6 @@ const AuthComponent = () => {
 	const local = useLocalSearchParams()
 
 	const test = usePathname()
-	console.log(test)
-
-	console.log('Local:', local, 'Global:', glob)
 
 	const { items, isLoading, error, authPost } = Auth()
 
@@ -140,7 +137,7 @@ const AuthComponent = () => {
 	// 		// router.push('/(tabs)/info')
 	// 	}
 	// }
-	console.log(items, error, isLoading)
+	// console.log(items, error, isLoading)
 
 	useEffect(() => {
 		async function getCurrentLocation() {
@@ -181,7 +178,7 @@ const AuthComponent = () => {
 									<Text style={tw`text-[30px]`}></Text>
 								</View>
 								<TouchableOpacity
-									onPress={() => router.push('/(tabs)/(dispenser)/home')}
+									onPress={() => router.push('/(tabs)/(dispenser)')}
 									style={styles.button}
 								>
 									<Text style={styles.buttonText}>Back to Home</Text>

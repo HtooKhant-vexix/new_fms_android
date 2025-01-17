@@ -2,100 +2,77 @@ import Dispenser from '@/app/components/Dispenser'
 import { DevControl, Token } from '@/store/library'
 import { Redirect } from 'expo-router'
 import React, { useEffect } from 'react'
-import { ImageBackground, SafeAreaView, ScrollView, StyleSheet, View } from 'react-native'
+import { ImageBackground, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Snackbar } from 'react-native-paper'
+import tw from 'twrnc'
 import backImg from '../../../../assets/bg.png'
 
 export default function DispenserScreen() {
 	const { setToken, items: token } = Token()
 	const { getDev, dev } = DevControl()
 
+	const { alert } = DevControl()
+
+	const [visible, setVisible] = React.useState(false)
+
+	const onToggleSnackBar = () => setVisible(!visible)
+
+	const onDismissSnackBar = () => setVisible(false)
+
+	useEffect(() => {
+		if (alert) {
+			setVisible(true)
+		} else {
+			setVisible(false)
+		}
+	}, [alert])
+
 	useEffect(() => {
 		getDev(token)
-	}, [])
-	// console.log(dev?.result, 'this is dev')
+	}, [token])
 
-	const dispensers = [
-		{
-			id: 1,
-			title: 'Premium Diesel',
-			description: 'Status: Available',
-			iconSource: require('../../../../assets/icon.png'),
-			price: 4500,
-			status: 'normal',
-		},
-		{
-			id: 2,
-			title: 'Premium Diesel',
-			description: 'Status: In Use',
-			iconSource: require('../../../../assets/icon.png'),
-			price: 4500,
-			status: 'normal',
-		},
-		{
-			id: 3,
-			title: 'Diesel',
-			description: 'Status: Available',
-			iconSource: require('../../../../assets/icon.png'),
-			price: 4500,
-			status: 'normal',
-		},
-		{
-			id: 4,
-			title: 'Octane Ron (92)',
-			description: 'Status: Maintenance',
-			iconSource: require('../../../../assets/icon.png'),
-			price: 4500,
-			status: 'normal',
-		},
-	]
-
-	const first = dispensers.map((dispenser) => (
-		<Dispenser
-			key={dispenser?.id}
-			title={dispenser?.title}
-			description={dispenser?.description}
-			iconSource={dispenser?.iconSource}
-			price={dispenser?.price}
-			status={dispenser?.status}
-		/>
-	))
-
-	// useEffect(() => {
-	// 	if (!items) {
-	// 		const test = getToken()
-	// 		console.log(test, 'this is test')
-	// 	}
-	// }, [])
-
-	// console.log(items, 'this is token')
-
-	// console.warn(token, 'this is token')
+	// Check if the token is available, if not, redirect to the login screen
 	if (!token) {
 		return <Redirect href="/login" />
-	} else {
-		return (
-			<SafeAreaView style={styles.container}>
-				<ImageBackground source={backImg} resizeMode="cover" style={styles.image}>
-					<ScrollView horizontal={true} contentContainerStyle={styles.scrollContent}>
-						<View style={styles.grid}>
-							{dev?.result?.map((dispenser: any) => (
-								<Dispenser
-									noz={dispenser?.nozzle_no}
-									dis={dispenser?.dep_no}
-									key={dispenser?._id}
-									title={dispenser?.fuel_type}
-									description={dispenser?.description}
-									iconSource={dispenser?.iconSource}
-									price={dispenser?.daily_price}
-									status={dispenser?.status}
-								/>
-							))}
-						</View>
-					</ScrollView>
-				</ImageBackground>
-			</SafeAreaView>
-		)
 	}
+
+	return (
+		<SafeAreaView style={styles.container}>
+			<ImageBackground source={backImg} resizeMode="cover" style={styles.image}>
+				<ScrollView contentContainerStyle={styles.scrollContent}>
+					{/* Vertical ScrollView for dispensers */}
+					<View style={styles.grid}>
+						{dev?.result?.map((dispenser: any) => (
+							<Dispenser
+								noz={dispenser?.nozzle_no}
+								dis={dispenser?.dep_no}
+								key={dispenser?._id}
+								title={dispenser?.fuel_type}
+								description={dispenser?.description}
+								iconSource={dispenser?.iconSource}
+								price={dispenser?.daily_price}
+								status={dispenser?.status}
+							/>
+						))}
+					</View>
+				</ScrollView>
+				<Snackbar
+					visible={visible}
+					onDismiss={onDismissSnackBar}
+					style={tw`ml-auto mb-10 mr-14 w-[320px]  bg-green-300 `}
+					// action={{
+					// 	label: 'Undo',
+					// 	textColor: 'black',
+					// 	onPress: () => {
+					// 		// Do something
+					// 	},
+					// }}
+				>
+					<Text style={tw`text-2xl text-gray-800 `}>Process Success !</Text>
+				</Snackbar>
+			</ImageBackground>
+		</SafeAreaView>
+	)
 }
 
 const styles = StyleSheet.create({
@@ -107,46 +84,18 @@ const styles = StyleSheet.create({
 		flex: 1,
 		justifyContent: 'center',
 	},
-	header: {
-		flexDirection: 'row',
-		justifyContent: 'space-between',
-		alignItems: 'center',
-		padding: 16,
-		backgroundColor: '#ffffff',
-		borderBottomWidth: 1,
-		borderBottomColor: '#e0e0e0',
-	},
-	logo: {
-		width: 120,
-		height: 40,
-		resizeMode: 'contain',
-	},
-	headerIcons: {
-		flexDirection: 'row',
-		gap: 16,
-	},
-	iconButton: {
-		padding: 8,
-	},
-	icon: {
-		width: 24,
-		height: 24,
-	},
 	scrollContent: {
 		padding: 16,
 	},
 	grid: {
-		flexDirection: 'row',
-		flexWrap: 'wrap',
-		gap: 16,
+		flexDirection: 'row', // Stack items vertically
 		paddingStart: 16,
+		flexWrap: 'wrap',
 		alignItems: 'center',
 		justifyContent: 'center',
-		paddingTop: 35,
-		width: 1105,
 	},
 	card: {
-		width: '48%',
+		width: '100%', // Full width for each item, can be adjusted if needed
 		backgroundColor: '#ffffff',
 		borderRadius: 12,
 		shadowColor: '#000',
@@ -157,6 +106,7 @@ const styles = StyleSheet.create({
 		shadowOpacity: 0.1,
 		shadowRadius: 4,
 		elevation: 3,
+		marginBottom: 16, // Spacing between items
 	},
 	cardContent: {
 		padding: 16,

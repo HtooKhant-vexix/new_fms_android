@@ -19,10 +19,6 @@ const fail = () => {
 
 	const test = usePathname()
 
-	console.log(test)
-
-	console.log('Local:', local, 'Global:', glob)
-
 	const [receivedData, setReceivedData] = useState('')
 	const [location, setLocation] = useState<Location.LocationObject | null>(null)
 	const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -48,7 +44,7 @@ const fail = () => {
 									<Text style={tw`text-[30px]`}></Text>
 								</View>
 								<TouchableOpacity
-									onPress={() => router.push('/(tabs)/(dispenser)/home')}
+									onPress={() => router.push('/(tabs)/(dispenser)')}
 									style={styles.button}
 								>
 									<Text style={styles.buttonText}>Back to Home</Text>

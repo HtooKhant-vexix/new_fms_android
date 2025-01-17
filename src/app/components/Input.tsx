@@ -17,7 +17,7 @@ const Input = ({ label, setValue, onPress, value, style }) => {
 					style={tw`bg-gray-300 mx-auto  border-0 rounded-md pl-6 w-[370px] h-[100px] mb-4 focus:bg-gray-200 flex items-end ${style}`}
 				>
 					<Text
-						style={tw` text-gray-700 flex inline pr-7 text-end block text-[74px] font-semibold`}
+						style={tw` text-gray-700 flex  pr-7  text-[74px] font-semibold`}
 						// onChangeText={(text) => setValue(text)}
 					>
 						{value}
