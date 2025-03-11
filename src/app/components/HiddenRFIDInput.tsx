@@ -27,7 +27,13 @@ const HiddenRFIDInput = ({ onRFIDScan }) => {
 		// Set a timeout to process RFID input after 300ms of inactivity
 		typingTimeout.current = setTimeout(() => {
 			if (text.trim().length > 0) {
-				onRFIDScan(text.trim()) // Process RFID scan
+				const decimalValue = parseInt(text.trim(), 10) // Convert string to number
+				const hexData = decimalValue.toString(16).padStart(8, '0') // Convert to hex & pad
+
+				// Swap to little-endian (reverse bytes in pairs)
+				const littleEndianHex = hexData.match(/../g).reverse().join('')
+
+				onRFIDScan(littleEndianHex) // Process RFID scan
 				setRfidData('') // Clear input for next scan
 			}
 		}, 300) // Adjust delay if necessary
