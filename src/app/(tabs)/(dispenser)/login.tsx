@@ -1,8 +1,8 @@
-import { localInstance } from '@/api/axios'
-import { colors, storeToken } from '@/constants/tokens'
+import HiddenRFIDInput from '@/app/components/HiddenRFIDInput'
+import { colors } from '@/constants/tokens'
 import { Token } from '@/store/library'
 import * as Location from 'expo-location'
-import { router, useGlobalSearchParams, useLocalSearchParams, usePathname } from 'expo-router'
+import { useGlobalSearchParams, useLocalSearchParams, usePathname } from 'expo-router'
 import React, { useEffect, useState } from 'react'
 import { Image, ImageBackground, SafeAreaView, StyleSheet, Text, View } from 'react-native'
 import SerialPortAPI from 'react-native-serial-port-api'
@@ -50,36 +50,37 @@ const LoginComponent = () => {
 						const data = buff.toString('ascii')
 						// const formData = new FormData()
 						// console.log(data)
-						if (data) {
-							const body = {
-								cardId: data.replace(/\s+/g, ''),
-							}
 
-							// authPost(`/user/cardAuth`, body)
-							localInstance
-								.post(`/user/cardAuth`, body, {
-									headers: {
-										// Authorization: 'Bearer ' + token,
-										'Content-Type': 'multipart/form-data',
-									},
-								})
-								.then((res) => {
-									console.log(res?.data?.result?.token)
-									const token = res?.data?.result?.token
-									storeToken(token)
-									setToken(token)
-									port.close()
-									if (res?.data?.con) {
-										router.push('/(tabs)/(dispenser)')
-									}
-									// dispatch({ type: 'fetch-data', payload: res.data })
-								})
-								.catch((e) => {
-									// dispatch({ type: 'error', payload: e })
-									console.log(e)
-									router.push('/(tabs)/(dispenser)/fail')
-								})
-						}
+						// if (data) {
+						// 	const body = {
+						// 		cardId: data.replace(/\s+/g, ''),
+						// 	}
+
+						// 	// authPost(`/user/cardAuth`, body)
+						// 	localInstance
+						// 		.post(`/user/cardAuth`, body, {
+						// 			headers: {
+						// 				// Authorization: 'Bearer ' + token,
+						// 				'Content-Type': 'multipart/form-data',
+						// 			},
+						// 		})
+						// 		.then((res) => {
+						// 			console.log(res?.data?.result?.token)
+						// 			const token = res?.data?.result?.token
+						// 			storeToken(token)
+						// 			setToken(token)
+						// 			port.close()
+						// 			if (res?.data?.con) {
+						// 				router.push('/(tabs)/(dispenser)')
+						// 			}
+						// 			// dispatch({ type: 'fetch-data', payload: res.data })
+						// 		})
+						// 		.catch((e) => {
+						// 			// dispatch({ type: 'error', payload: e })
+						// 			console.log(e)
+						// 			router.push('/(tabs)/(dispenser)/fail')
+						// 		})
+						// }
 					})
 
 					setSerialPort(port)
@@ -153,11 +154,17 @@ const LoginComponent = () => {
 	// }, [])
 	// console.log(receivedData, 'this is data', location)
 
+	const handleRFIDScan = (rfid) => {
+		console.log('Scanned RFID:', rfid)
+		// Perform login logic here
+	}
+
 	return (
 		<>
 			<SafeAreaView style={styles.container}>
 				<ImageBackground source={backImg} resizeMode="cover" style={styles.image}>
 					<View style={styles.card}>
+						{/* <TouchableOpacity onPress={() => router.push('/(tabs)/(dispenser)')} style={styles.card}> */}
 						{/* <Text style={styles.title}>Authentication for nozzle 02</Text> */}
 						<View style={styles.contentContainer}>
 							<Image source={require('../../../../assets/rfid.png')} style={styles.image1} />
@@ -169,7 +176,20 @@ const LoginComponent = () => {
 									<Text style={tw`text-[36px] font-semibold text-[${colors.primary}]`}>
 										Tap Cashier Card On Card Reader To Unlock The Dispenser
 									</Text>
-									<Text style={tw`text-[30px]`}></Text>
+									{/* <TextInput
+										ref={inputRef}
+										value={rfidData}
+										onChangeText={handleRFIDInput} // Handle RFID data input
+										autoFocus
+										showSoftInputOnFocus={false} // Prevent keyboard from showing
+										keyboardType="numeric"
+										returnKeyType="done"
+										blurOnSubmit={false}
+										editable={false} // Prevent manual editing
+										// style={styles.hiddenInput}
+									/> */}
+									<HiddenRFIDInput onRFIDScan={handleRFIDScan} />;
+									{/* <Text style={tw`text-[30px]`}></Text> */}
 								</View>
 								{/* <TouchableOpacity
 									onPress={() => router.push('/(tabs)/(dispenser)')}
