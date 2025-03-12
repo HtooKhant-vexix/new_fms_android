@@ -63,7 +63,6 @@ const Index = () => {
 	}, [])
 
 	const route = `detail-sale/pagi/by-date/1?sDate=${start}&eDate=${end}`
-
 	useEffect(() => {
 		fetchItems(route, token)
 	}, [fetchItems, route, token])

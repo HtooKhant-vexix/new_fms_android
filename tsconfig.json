@@ -17,6 +17,6 @@
 			"@/assets/*": ["./assets/*"]
 		}
 	},
-	"include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts", "src/app/(tabs)/voucher", "src/api/serial.jsx", "src/app/components/SelectDrop.jsx", "src/app/(tabs)/setting/index.jsx"],
+	"include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts", "src/app/(tabs)/voucher", "src/api/serial.jsx", "src/app/components/SelectDrop.jsx", "src/app/(tabs)/setting/index.jsx", "src/app/(tabs)/setting/changeMode.jsx"],
 	"exclude": ["node_modules"]
 }

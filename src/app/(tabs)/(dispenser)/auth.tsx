@@ -1,4 +1,5 @@
 import { localInstance } from '@/api/axios'
+import HiddenRFIDInput from '@/app/components/HiddenRFIDInput'
 import { colors } from '@/constants/tokens'
 import { Auth } from '@/store/library'
 import * as Location from 'expo-location'
@@ -158,6 +159,44 @@ const AuthComponent = () => {
 	// useEffect(() => {
 	// }, [])
 	// console.log(receivedData, 'this is data', location)
+	const handleRFIDScan = (data) => {
+		console.log('Scanned RFID:', data)
+		if (data) {
+			const body = {
+				cardId: data.replace(/\s+/g, ''),
+			}
+
+			// authPost(`/user/cardAuth`, body)
+			localInstance
+				.post(`/user/cardAuth`, body, {
+					headers: {
+						// Authorization: 'Bearer ' + token,
+						'Content-Type': 'multipart/form-data',
+					},
+				})
+				.then((res) => {
+					// console.log(res?.data?.result?.token)
+					// const token = res?.data?.result?.token
+					// storeToken(token)
+					// port.close()
+					if (res?.data?.con) {
+						router.push('/(tabs)/info')
+						router.setParams({
+							dis: glob?.dis,
+							noz: glob?.noz,
+							price: glob?.price,
+							fuel: glob.fuel,
+						})
+					}
+					// dispatch({ type: 'fetch-data', payload: res.data })
+				})
+				.catch((e) => {
+					// dispatch({ type: 'error', payload: e })
+					console.log(e)
+					router.push('/(tabs)/(dispenser)/fail')
+				})
+		}
+	}
 
 	return (
 		<>
@@ -177,6 +216,7 @@ const AuthComponent = () => {
 									</Text>
 									<Text style={tw`text-[30px]`}></Text>
 								</View>
+								<HiddenRFIDInput onRFIDScan={handleRFIDScan} />;
 								<TouchableOpacity
 									onPress={() => router.push('/(tabs)/(dispenser)')}
 									style={styles.button}

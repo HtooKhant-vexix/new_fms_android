@@ -11,12 +11,21 @@ const InfoLayout = () => {
 						name="index"
 						options={{
 							headerShown: false,
+							animation: 'none',
 						}}
 					/>
 					<Stack.Screen
 						name="info"
 						options={{
 							headerShown: false,
+							animation: 'none',
+						}}
+					/>
+					<Stack.Screen
+						name="changeMode"
+						options={{
+							headerShown: false,
+							animation: 'none',
 						}}
 					/>
 				</Stack>

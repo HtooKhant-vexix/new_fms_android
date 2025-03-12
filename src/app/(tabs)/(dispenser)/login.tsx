@@ -1,107 +1,53 @@
+import { localInstance } from '@/api/axios'
 import HiddenRFIDInput from '@/app/components/HiddenRFIDInput'
-import { colors } from '@/constants/tokens'
+import { colors, storeToken } from '@/constants/tokens'
 import { Token } from '@/store/library'
-import * as Location from 'expo-location'
-import { useGlobalSearchParams, useLocalSearchParams, usePathname } from 'expo-router'
+import { router, usePathname } from 'expo-router'
 import React, { useEffect, useState } from 'react'
-import { Image, ImageBackground, SafeAreaView, StyleSheet, Text, View } from 'react-native'
+import {
+	Image,
+	ImageBackground,
+	SafeAreaView,
+	StyleSheet,
+	Text,
+	TouchableOpacity,
+	View,
+} from 'react-native'
 import SerialPortAPI from 'react-native-serial-port-api'
 import tw from 'twrnc'
 import backImg from '../../../../assets/bg.png'
 
 const LoginComponent = () => {
-	let start = new Date()
-	start.setHours(0)
-	start.setMinutes(0)
-	start.setSeconds(0)
-	start = new Date(start)
-
-	let end = new Date()
-	end.setHours(23)
-	end.setMinutes(59)
-	end.setSeconds(59)
-	end = new Date(end)
-
-	const route = `detail-sale/pagi/by-date/1?sDate=${start}&eDate=${end}`
-
-	const { setToken, items } = Token()
-
-	const [serialPort, setSerialPort] = useState<any>(null)
+	const { setToken } = Token()
+	const [serialPort, setSerialPort] = useState(null)
+	const test = usePathname()
 
 	useEffect(() => {
 		const setupSerialPort = async () => {
 			try {
-				// console.log('start pro')
-				const port = await SerialPortAPI.open('/dev/ttyS8', {
-					baudRate: 9600,
+				const port = await SerialPortAPI.open('/dev/ttyS8', { baudRate: 9600 })
+				console.log('Serial port opened successfully')
+
+				const subscription = port.onReceived((buff) => {
+					console.log('Received data:', buff.toString('hex'))
 				})
-				// console.log('serial port open', port)
 
-				// console.log(port);
-				// Check if the serial port is open
-				if (port && test == '/login') {
-					// console.log("Serial port is open");
-					// Subscribe to received data
-					// console.log('port was opened')
-					const subscription = port.onReceived(async (buff) => {
-						console.log('====================================')
-						console.log(buff.toString('ascii'))
-						console.log('===========u=========================')
-						const data = buff.toString('ascii')
-						// const formData = new FormData()
-						// console.log(data)
+				setSerialPort(port)
+				// await port.send('010302BC00288588')
+				console.log('hh')
 
-						// if (data) {
-						// 	const body = {
-						// 		cardId: data.replace(/\s+/g, ''),
-						// 	}
-
-						// 	// authPost(`/user/cardAuth`, body)
-						// 	localInstance
-						// 		.post(`/user/cardAuth`, body, {
-						// 			headers: {
-						// 				// Authorization: 'Bearer ' + token,
-						// 				'Content-Type': 'multipart/form-data',
-						// 			},
-						// 		})
-						// 		.then((res) => {
-						// 			console.log(res?.data?.result?.token)
-						// 			const token = res?.data?.result?.token
-						// 			storeToken(token)
-						// 			setToken(token)
-						// 			port.close()
-						// 			if (res?.data?.con) {
-						// 				router.push('/(tabs)/(dispenser)')
-						// 			}
-						// 			// dispatch({ type: 'fetch-data', payload: res.data })
-						// 		})
-						// 		.catch((e) => {
-						// 			// dispatch({ type: 'error', payload: e })
-						// 			console.log(e)
-						// 			router.push('/(tabs)/(dispenser)/fail')
-						// 		})
-						// }
-					})
-
-					setSerialPort(port)
-
-					// Remember to close the port and unsubscribe when the component unmounts
-					return () => {
-						// console.log("port close");
-						subscription.remove()
-						port.close()
-						serialPort(null)
-					}
-				} else {
-					console.log('Failed to open the serial port')
+				return () => {
+					subscription.remove()
+					port.close()
+					setSerialPort(null)
 				}
 			} catch (error) {
-				console.log('Error opening the serial port:', error)
+				console.error('Error opening serial port:', error)
 			}
 		}
 
-		// Call the setup function
 		setupSerialPort()
+
 		return () => {
 			if (serialPort) {
 				serialPort.close()
@@ -110,123 +56,75 @@ const LoginComponent = () => {
 		}
 	}, [])
 
-	const glob = useGlobalSearchParams()
-	const local = useLocalSearchParams()
+	const handleRFIDScan = (data) => {
+		console.log('Scanned RFID:', data)
+		if (data) {
+			const body = { cardId: data.trim() }
 
-	const test = usePathname()
-
-	// const { items, isLoading, error, authPost } = Auth()
-
-	const [receivedData, setReceivedData] = useState('')
-	const [location, setLocation] = useState<Location.LocationObject | null>(null)
-	const [errorMsg, setErrorMsg] = useState<string | null>(null)
-
-	// const handleDataReceived = (data) => {
-	// 	if (test == '/auth') {
-	// 		const body = {
-	// 			cardId: data,
-	// 		}
-	// 		setReceivedData(body)
-	// 		authPost(`user/cardAuth`, data)
-	// 		// console.log(data, 'this is data')
-	// 		// router.push('/(tabs)/info')
-	// 	}
-	// }
-	// console.log(items, error, isLoading)
-
-	useEffect(() => {
-		async function getCurrentLocation() {
-			let { status } = await Location.requestForegroundPermissionsAsync()
-			if (status !== 'granted') {
-				setErrorMsg('Permission to access location was denied')
-				return
-			}
-
-			let location = await Location.getCurrentPositionAsync({})
-			setLocation(location)
+			localInstance
+				.post('/user/cardAuth', body, {
+					headers: { 'Content-Type': 'multipart/form-data' },
+				})
+				.then((res) => {
+					const token = res?.data?.result?.token
+					storeToken(token)
+					setToken(token)
+					if (res?.data?.con) {
+						router.push('/(tabs)/(dispenser)')
+					}
+				})
+				.catch((e) => {
+					console.error('Login failed:', e)
+					router.push('/(tabs)/(dispenser)/fail')
+				})
 		}
+	}
 
-		getCurrentLocation()
-	}, [])
-
-	// test == '/auth'  useSerialPort('/dev/ttyS8', 9600, handleDataReceived, 'ascii')
-	// useEffect(() => {
-	// }, [])
-	// console.log(receivedData, 'this is data', location)
-
-	const handleRFIDScan = (rfid) => {
-		console.log('Scanned RFID:', rfid)
-		// Perform login logic here
+	const sendSerialData = async () => {
+		if (!serialPort) {
+			console.warn('Serial port is not open')
+			return
+		}
+		try {
+			await serialPort.send('010302BC00288588')
+			console.log('Data sent via serial port')
+		} catch (error) {
+			console.error('Failed to send data:', error)
+		}
 	}
 
 	return (
-		<>
-			<SafeAreaView style={styles.container}>
-				<ImageBackground source={backImg} resizeMode="cover" style={styles.image}>
-					<View style={styles.card}>
-						{/* <TouchableOpacity onPress={() => router.push('/(tabs)/(dispenser)')} style={styles.card}> */}
-						{/* <Text style={styles.title}>Authentication for nozzle 02</Text> */}
-						<View style={styles.contentContainer}>
-							<Image source={require('../../../../assets/rfid.png')} style={styles.image1} />
-							<View style={styles.textContainer}>
-								<View style={tw`mt-3`}>
-									{/* <Text style={tw`text-[25px] text-slate-700 ml-2 mb-3`}>
-										Authentication for nozzle {glob?.nozzle}
-									</Text> */}
-									<Text style={tw`text-[36px] font-semibold text-[${colors.primary}]`}>
-										Tap Cashier Card On Card Reader To Unlock The Dispenser
-									</Text>
-									{/* <TextInput
-										ref={inputRef}
-										value={rfidData}
-										onChangeText={handleRFIDInput} // Handle RFID data input
-										autoFocus
-										showSoftInputOnFocus={false} // Prevent keyboard from showing
-										keyboardType="numeric"
-										returnKeyType="done"
-										blurOnSubmit={false}
-										editable={false} // Prevent manual editing
-										// style={styles.hiddenInput}
-									/> */}
-									<HiddenRFIDInput onRFIDScan={handleRFIDScan} />;
-									{/* <Text style={tw`text-[30px]`}></Text> */}
-								</View>
-								{/* <TouchableOpacity
-									onPress={() => router.push('/(tabs)/(dispenser)')}
-									style={styles.button}
-								>
-									<Text style={styles.buttonText}>Back to Home</Text>
-								</TouchableOpacity> */}
+		<SafeAreaView style={styles.container}>
+			<ImageBackground source={backImg} resizeMode="cover" style={styles.image}>
+				<View style={styles.card}>
+					<View style={styles.contentContainer}>
+						<Image source={require('../../../../assets/rfid.png')} style={styles.image1} />
+						<View style={styles.textContainer}>
+							<View style={tw`mt-3`}>
+								<Text style={tw`text-[36px] font-semibold text-[${colors.primary}]`}>
+									Tap Cashier Card On Card Reader To Unlock The Dispenser
+								</Text>
+								<HiddenRFIDInput onRFIDScan={handleRFIDScan} />
 							</View>
-							{/* <Text>Received Data: {receivedData}</Text>
-							<SerialPortComponent
-								portName="/dev/ttyS8"
-								baudRate={38400}
-								onDataReceived={handleDataReceived}
-							/> */}
+							<TouchableOpacity onPress={sendSerialData} style={styles.button}>
+								<Text style={styles.buttonText}>Send Serial Command</Text>
+							</TouchableOpacity>
 						</View>
 					</View>
-				</ImageBackground>
-			</SafeAreaView>
-		</>
+				</View>
+			</ImageBackground>
+		</SafeAreaView>
 	)
 }
 
 const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		backgroundColor: '#f5f5f5',
-	},
+	container: { flex: 1, backgroundColor: '#f5f5f5' },
 	card: {
 		backgroundColor: '#fff',
 		borderRadius: 12,
 		padding: 16,
-		// margin: 16,
 		shadowColor: '#000',
-		shadowOffset: {
-			width: 0,
-			height: 2,
-		},
+		shadowOffset: { width: 0, height: 2 },
 		marginTop: -30,
 		marginHorizontal: 'auto',
 		width: 800,
@@ -234,35 +132,10 @@ const styles = StyleSheet.create({
 		shadowRadius: 3.84,
 		elevation: 5,
 	},
-	image: {
-		flex: 1,
-		justifyContent: 'center',
-	},
-	title: {
-		fontSize: 24,
-		marginStart: 15,
-		fontWeight: 'bold',
-		marginBottom: 16,
-	},
-	contentContainer: {
-		flexDirection: 'row',
-		gap: 16,
-	},
-	image1: {
-		width: 280,
-		height: 280,
-		borderRadius: 8,
-	},
-	textContainer: {
-		flex: 1,
-		justifyContent: 'space-between',
-		paddingHorizontal: 10,
-	},
-	paragraph: {
-		fontSize: 16,
-		lineHeight: 24,
-		color: '#666',
-	},
+	image: { flex: 1, justifyContent: 'center' },
+	contentContainer: { flexDirection: 'row', gap: 16 },
+	image1: { width: 280, height: 280, borderRadius: 8 },
+	textContainer: { flex: 1, justifyContent: 'space-between', paddingHorizontal: 10 },
 	button: {
 		backgroundColor: '#007AFF',
 		padding: 12,
@@ -270,11 +143,7 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 		marginTop: 16,
 	},
-	buttonText: {
-		color: '#fff',
-		fontSize: 16,
-		fontWeight: '600',
-	},
+	buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
 })
 
 export default LoginComponent

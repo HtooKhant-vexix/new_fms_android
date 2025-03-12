@@ -10,6 +10,7 @@ const useStore = create((set) => ({
 	// Fetch items from API
 	fetchItems: async (route: string, token: string) => {
 		set({ isLoading: true, error: null })
+		console.log(route, token, '...')
 		try {
 			const response = await localInstance.get(route, {
 				headers: {

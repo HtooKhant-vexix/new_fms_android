@@ -107,6 +107,16 @@ const InfoComponent = () => {
 								INFO
 							</Text>
 						</TouchableOpacity>
+						<TouchableOpacity
+							onPress={() => router.push(`/(tabs)/setting/changeMode`)}
+							style={tw`flex flex-row w-33  items-start`}
+						>
+							<Text
+								style={tw`text-[20px] font-semibold rounded-md bg-[${colors.primary}] w-full text-center py-4 text-white`}
+							>
+								Mode
+							</Text>
+						</TouchableOpacity>
 					</View>
 
 					{/* {funData && ( */}
