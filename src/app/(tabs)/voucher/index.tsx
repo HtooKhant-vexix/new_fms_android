@@ -1,6 +1,8 @@
+import SetupWizard from '@/app/components/Setup'
 import Voucher from '@/app/components/Voucher'
 import { colors } from '@/constants/tokens'
 import { Token, useStore } from '@/store/library'
+import { loadConfig } from '@/store/setup'
 import { utilsStyles } from '@/styles'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import React, { useEffect, useState } from 'react'
@@ -66,6 +68,8 @@ const Index = () => {
 	useEffect(() => {
 		fetchItems(route, token)
 	}, [fetchItems, route, token])
+
+	console.log(items,error?.response, 'this is token kkkkk')
 
 	const [chg, setChg] = useState({ hex: '', text: '' })
 
@@ -166,6 +170,8 @@ const Index = () => {
 		}
 	}
 
+	console.log(loadConfig(), 'this is load config')
+
 	return (
 		<View style={tw`px-6 py-2`}>
 			{items?.result ? (
@@ -191,6 +197,7 @@ const Index = () => {
 			)}
 		</View>
 	)
+
 }
 
 export default Index

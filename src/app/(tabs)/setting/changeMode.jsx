@@ -17,7 +17,7 @@ import tw from 'twrnc'
 import backImg from '../../../../assets/bg.png'
 
 const ChangeMode = () => {
-	const [isDirectMode, setIsDirectMode] = useState(false)
+	const [isDirectMode, setIsDirectMode] = useState(true)
 	const router = useRouter()
 	console.log(isDirectMode, '---- this is mode')
 

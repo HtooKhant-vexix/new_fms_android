@@ -121,12 +121,14 @@ const styles = StyleSheet.create({
 	},
 	scrollContent: {
 		padding: 16,
+		// backgroundColor: "red"
 	},
 	grid: {
-		flexDirection: 'row',
+		flexDirection: 'column',
 		flexWrap: 'wrap',
 		gap: 16,
-		paddingStart: 16,
+		display: "flex",
+		// paddingStart: 16,
 		alignItems: 'center',
 		justifyContent: 'center',
 		paddingTop: 35,

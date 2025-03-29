@@ -47,9 +47,9 @@ const LoginComponent = () => {
 					// console.log("Serial port is open");
 					// Subscribe to received data
 					const subscription = serialPort.onReceived(async (buff) => {
-						console.log('====================================')
+						console.log('==============login1======================')
 						console.log(buff.toString('ascii'))
-						console.log('===========u=========================')
+						console.log('===========login2=========================')
 						const data = buff.toString('ascii')
 						// const formData = new FormData()
 						// console.log(data)

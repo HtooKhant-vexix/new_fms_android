@@ -11,27 +11,26 @@ export async function storeToken(token) {
 }
 
 export async function getToken() {
-	// const { setToken, items } = Token()
 	try {
 		const credentials = await Keychain.getGenericPassword()
-		if (credentials) {
-			const token = credentials.password
+		if (credentials && credentials.password) {
+			const token = credentials.password // Extract the actual token
 			// console.log('Token retrieved:', token)
-
-			// setToken(token)
-			return credentials
+			return token // Return the extracted token
 		} else {
 			console.log('No token found')
 			return null
 		}
 	} catch (error) {
 		console.error('Error retrieving token', error)
+		return null
 	}
 }
 
 export const colors = {
 	background: '#fff',
 	primary: '#33b0f9',
+	data: '#003b8f',
 	text: '#000',
 	textMuted: '#9ca3af',
 	icon: '#fff',

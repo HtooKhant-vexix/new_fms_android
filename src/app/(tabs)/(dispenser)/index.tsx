@@ -1,74 +1,111 @@
 import Dispenser from '@/app/components/Dispenser'
-import { DevControl, Token } from '@/store/library'
+import SetupWizard from '@/app/components/Setup'
+import { DevControl, nozConfig, Token } from '@/store/library'
 import { Redirect } from 'expo-router'
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { ImageBackground, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { Snackbar } from 'react-native-paper'
 import tw from 'twrnc'
 import backImg from '../../../../assets/bg.png'
+import { clearConfig } from '@/store/setup'
 
 export default function DispenserScreen() {
-	const { setToken, items: token } = Token()
-	const { getDev, dev } = DevControl()
+	const { setToken, items: token, isRefresh } = Token()
+	const { items: configNoz } = nozConfig()
+	const { getDev, dev, alert } = DevControl()
 
-	const { alert } = DevControl()
+	const [visible, setVisible] = useState(false)
+	const [dispensers, setDispensers] = useState([])
+	const [config, setConfig] = useState(null)
+	const [loadingConfig, setLoadingConfig] = useState(true)
 
-	const [visible, setVisible] = React.useState(false)
+	const filData =
+		configNoz &&
+		JSON.parse(configNoz)?.nozzleConfigs?.map((nozzle) => nozzle?.number.padStart(2, '0'))
+	console.log(dispensers.filter((dispenser) => filData?.includes(dispenser?.nozzle_no)))
+	console.log(filData)
+	const nozData = dispensers.filter((dispenser) => filData?.includes(dispenser?.nozzle_no))
+	console.log(configNoz && JSON.parse(configNoz)?.nozzleConfigs, 'hhhh')
+  
 
-	const onToggleSnackBar = () => setVisible(!visible)
-
-	const onDismissSnackBar = () => setVisible(false)
-
+	// Show Snackbar if alert is triggered
 	useEffect(() => {
-		if (alert) {
-			setVisible(true)
-		} else {
-			setVisible(false)
-		}
+		setVisible(!!alert)
 	}, [alert])
 
+	// Fetch dispensers if token is available
 	useEffect(() => {
-		getDev(token)
+		if (token) {
+			getDev(token)
+		}
 	}, [token])
 
-	// Check if the token is available, if not, redirect to the login screen
+	// Update dispensers when dev data is received
+	useEffect(() => {
+		if (dev?.result) {
+			setDispensers(dev.result)
+		}
+	}, [dev])
+
+	// Load configuration from AsyncStorage
+	// useEffect(() => {
+	// 	const loadConfig = async () => {
+	// 		try {
+	// 			const configString = await AsyncStorage.getItem('fuelDispenserConfig')
+	// 			setConfig(configString ? configString : null)
+	// 		} catch (error) {
+	// 			console.error('Error loading config:', error)
+	// 		} finally {
+	// 			setLoadingConfig(false)
+	// 		}
+	// 	}
+	// 	loadConfig()
+	// 	// clearConfig()
+	// }, [])
+  // clearConfig()
+
+	// Redirect to login if token is missing
 	if (!token) {
 		return <Redirect href="/login" />
 	}
 
+	// Redirect to setup if config is missing
+	// if (!loadingConfig && !config) {
+	// 	return <Redirect href="/(tabs)/setup" />
+	// }
+
 	return (
 		<SafeAreaView style={styles.container}>
 			<ImageBackground source={backImg} resizeMode="cover" style={styles.image}>
-				<ScrollView contentContainerStyle={styles.scrollContent}>
-					{/* Vertical ScrollView for dispensers */}
-					<View style={styles.grid}>
-						{dev?.result?.map((dispenser: any) => (
-							<Dispenser
-								noz={dispenser?.nozzle_no}
-								dis={dispenser?.dep_no}
-								key={dispenser?._id}
-								title={dispenser?.fuel_type}
-								description={dispenser?.description}
-								iconSource={dispenser?.iconSource}
-								price={dispenser?.daily_price}
-								status={dispenser?.status}
-							/>
-						))}
-					</View>
-				</ScrollView>
+				{configNoz ? (
+					<ScrollView contentContainerStyle={styles.scrollContent}>
+						{/* Grid for dispensers */}
+						<View style={styles.grid}>
+							{nozData.map((dispenser) => (
+								<Dispenser
+									key={dispenser?._id}
+									noz={dispenser?.nozzle_no}
+									dis={dispenser?.dep_no}
+									title={dispenser?.fuel_type}
+									description={dispenser?.description}
+									iconSource={dispenser?.iconSource}
+									price={dispenser?.daily_price}
+									status={dispenser?.status}
+									addr={configNoz && JSON.parse(configNoz)?.nozzleConfigs}
+								/>
+							))}
+						</View>
+					</ScrollView>
+				) : (
+					<SetupWizard />
+				)}
+
 				<Snackbar
 					visible={visible}
-					onDismiss={onDismissSnackBar}
-					style={tw`ml-auto mb-10 mr-14 w-[320px]  bg-green-300 `}
-					// action={{
-					// 	label: 'Undo',
-					// 	textColor: 'black',
-					// 	onPress: () => {
-					// 		// Do something
-					// 	},
-					// }}
+					onDismiss={() => setVisible(false)}
+					style={tw`ml-auto mb-10 mr-14 w-[320px] bg-green-300`}
 				>
-					<Text style={tw`text-2xl text-gray-800 `}>Process Success !</Text>
+					<Text style={tw`text-2xl text-gray-800`}>Process Success!</Text>
 				</Snackbar>
 			</ImageBackground>
 		</SafeAreaView>
@@ -88,54 +125,10 @@ const styles = StyleSheet.create({
 		padding: 16,
 	},
 	grid: {
-		flexDirection: 'row', // Stack items vertically
+		flexDirection: 'row',
 		paddingStart: 16,
 		flexWrap: 'wrap',
 		alignItems: 'center',
 		justifyContent: 'center',
-	},
-	card: {
-		width: '100%', // Full width for each item, can be adjusted if needed
-		backgroundColor: '#ffffff',
-		borderRadius: 12,
-		shadowColor: '#000',
-		shadowOffset: {
-			width: 0,
-			height: 2,
-		},
-		shadowOpacity: 0.1,
-		shadowRadius: 4,
-		elevation: 3,
-		marginBottom: 16, // Spacing between items
-	},
-	cardContent: {
-		padding: 16,
-		flexDirection: 'row',
-		alignItems: 'center',
-		gap: 12,
-	},
-	cardIconContainer: {
-		width: 48,
-		height: 48,
-		borderRadius: 24,
-		backgroundColor: '#f0f0f0',
-		justifyContent: 'center',
-		alignItems: 'center',
-	},
-	cardIcon: {
-		width: 24,
-		height: 24,
-	},
-	cardTextContainer: {
-		flex: 1,
-	},
-	cardTitle: {
-		fontSize: 16,
-		fontWeight: '600',
-		marginBottom: 4,
-	},
-	cardDescription: {
-		fontSize: 14,
-		color: '#666666',
 	},
 })

@@ -39,7 +39,7 @@ const fail = () => {
 										Authentication for nozzle {glob?.nozzle}
 									</Text>
 									<Text style={tw`text-[36px] font-semibold text-red-400`}>
-										Card is not invalid To Unlock The Dispenser
+										Card is not valid To Unlock The Dispenser
 									</Text>
 									<Text style={tw`text-[30px]`}></Text>
 								</View>

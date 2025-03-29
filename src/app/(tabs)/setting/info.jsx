@@ -13,6 +13,7 @@ import {
 import { Button, TextInput } from 'react-native-paper'
 import tw from 'twrnc'
 import backImg from '../../../../assets/bg.png'
+import Toast from 'react-native-toast-message'
 
 const InfoComponent = () => {
 	const glob = useGlobalSearchParams()
@@ -27,8 +28,20 @@ const InfoComponent = () => {
 		try {
 			const jsonValue = JSON.stringify(value)
 			await AsyncStorage.setItem('info', jsonValue)
+			Toast.show({
+				type: 'success',
+				text1: 'Saved Successfully!',
+				text2: 'Data has been saved successfully.',
+				// position: 'bottom',
+			})
 			console.log('stored')
 		} catch (e) {
+			Toast.show({
+				type: 'error',
+				text1: 'Something was wrong!',
+				text2: 'Data has not been saved successfully.',
+				// position: 'bottom',
+			})
 			console.log(e, 'this is error')
 		}
 	}

@@ -28,6 +28,7 @@ const FunCard = ({ onClick, index, data, btn, setIndex, setField }) => {
 
 	return (
 		<>
+		
 			<View style={tw`flex flex-row justify-center my-1 items-center gap-8`}>
 				<TouchableOpacity
 					// key={index}

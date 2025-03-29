@@ -14,9 +14,9 @@ import {
 	View,
 } from 'react-native'
 import { ActivityIndicator } from 'react-native-paper'
+import Toast from 'react-native-toast-message'
 import tw from 'twrnc'
 import backImg from '../../../../assets/bg.png'
-
 const AuthComponent = () => {
 	const glob = useGlobalSearchParams()
 	const local = useLocalSearchParams()
@@ -30,7 +30,38 @@ const AuthComponent = () => {
 			const jsonValue = JSON.stringify(value)
 			await AsyncStorage.setItem('FnKey', jsonValue)
 			console.log('stored')
+			// Swal.fire({
+			// 	title: 'Success!',
+			// 	text: 'Data has been saved successfully.',
+			// 	icon: 'success',
+			// 	confirmButtonText: 'OK',
+			// })
+			Toast.show({
+				type: 'success',
+				text1: 'Saved Successfully!',
+				text2: 'Fn Key has been saved successfully.',
+				// position: 'bottom',
+			})
+			// SweetAlert.showAlertWithOptions(
+			// 	{
+			// 		title: 'Success!',
+			// 		subTitle: 'Data has been saved successfully.',
+			// 		confirmButtonTitle: 'OK',
+			// 		confirmButtonColor: '#000',
+			// 		// otherButtonTitle: 'Cancel',
+			// 		// otherButtonColor: '#dedede',
+			// 		style: 'success',
+			// 		// cancellable: true,
+			// 	},
+			// 	(callback) => console.log('callback'),
+			// )
 		} catch (e) {
+			Toast.show({
+				type: 'error',
+				text1: 'Something was wrong!',
+				text2: 'Data has not been saved successfully.',
+				// position: 'bottom',
+			})
 			console.log(e, 'this is error')
 		}
 	}, [])
@@ -79,7 +110,7 @@ const AuthComponent = () => {
 	)
 
 	useEffect(() => {
-		async function getCurrentLocation() {
+		const getCurrentLocation = async () => {
 			let { status } = await Location.requestForegroundPermissionsAsync()
 			if (status !== 'granted') {
 				setErrorMsg('Permission to access location was denied')
@@ -90,37 +121,40 @@ const AuthComponent = () => {
 			setLocation(location)
 		}
 
-		try {
-			const dataGet = async () => {
-				const jsonValue = await AsyncStorage.getItem('FnKey')
-				console.log(JSON.parse(jsonValue), 'this is json value')
+		const dataGet = async () => {
+			const jsonValue = await AsyncStorage.getItem('FnKey')
+			console.log(JSON.parse(jsonValue), 'this is json value')
+			console.log('what is that', jsonValue)
 
+			if (JSON.parse(jsonValue) != null) {
 				const data = JSON.parse(jsonValue)
 				console.log(data[2], 'this is data')
-
-				if (jsonValue) {
-					setFunData(data)
-				} else {
-					setFunData({
-						1: {
-							liter: '-',
-							price: '-',
-						},
-						2: {
-							liter: '-',
-							price: '-',
-						},
-						3: {
-							liter: '-',
-							price: '-',
-						},
-						4: {
-							liter: '-',
-							price: '-',
-						},
-					})
-				}
+				setFunData(data)
+				console.log('wkkkkk')
+			} else {
+				console.log('wkkkkeeeeeeeeeeeek')
+				setFunData({
+					1: {
+						liter: '',
+						price: '',
+					},
+					2: {
+						liter: '',
+						price: '',
+					},
+					3: {
+						liter: '',
+						price: '',
+					},
+					4: {
+						liter: '',
+						price: '',
+					},
+				})
 			}
+		}
+
+		try {
 			dataGet()
 			getCurrentLocation()
 		} catch (e) {
@@ -143,7 +177,7 @@ const AuthComponent = () => {
 				[key]: {
 					...prevData[key],
 					[field]: prevData[key][field] + newValue,
-					['price']: '-',
+					['price']: '',
 				},
 			}))
 		} else {
@@ -152,7 +186,7 @@ const AuthComponent = () => {
 				[key]: {
 					...prevData[key],
 					[field]: prevData[key][field] + newValue,
-					['liter']: '-',
+					['liter']: '',
 				},
 			}))
 		}
@@ -165,7 +199,7 @@ const AuthComponent = () => {
 				[key]: {
 					...prevData[key],
 					[field]: String(prevData[key][field])?.slice(0, -1),
-					['price']: '-',
+					['price']: '',
 				},
 			}))
 		} else {
@@ -174,7 +208,7 @@ const AuthComponent = () => {
 				[key]: {
 					...prevData[key],
 					[field]: String(prevData[key][field])?.slice(0, -1),
-					['liter']: '-',
+					['liter']: '',
 				},
 			}))
 		}
@@ -216,9 +250,16 @@ const AuthComponent = () => {
 							</Text>
 						</TouchableOpacity>
 					</View>
+
 					{funData ? (
 						<View style={tw`flex justify-center flex-row items-center gap-8 py-4`}>
 							<View>
+								<View style={tw`flex flex-row justify-between mt-[-15px] items-center`}>
+									<View style={tw`flex flex-row items-center`}>
+										<Text style={tw`text-[30px] ml-68 mr-20 mb-[-10px]`}>Liter:</Text>
+										<Text style={tw`text-[30px] ml-40 mb-[-10px] `}>Price:</Text>
+									</View>
+								</View>
 								{[...Array(4)].map((e, index) => (
 									<FunCard
 										onClick={updateData}

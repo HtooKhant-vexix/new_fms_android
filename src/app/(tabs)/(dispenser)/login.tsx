@@ -1,7 +1,15 @@
 import { localInstance } from '@/api/axios'
 import HiddenRFIDInput from '@/app/components/HiddenRFIDInput'
+import {
+	closeSerialPort,
+	openSerialPort,
+	readMultipleRegisters,
+	writeMultipleRegisters,
+	writeSingleRegister,
+} from '@/command/controlDispenser'
 import { colors, storeToken } from '@/constants/tokens'
 import { Token } from '@/store/library'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { router, usePathname } from 'expo-router'
 import React, { useEffect, useState } from 'react'
 import {
@@ -13,7 +21,6 @@ import {
 	TouchableOpacity,
 	View,
 } from 'react-native'
-import SerialPortAPI from 'react-native-serial-port-api'
 import tw from 'twrnc'
 import backImg from '../../../../assets/bg.png'
 
@@ -22,39 +29,28 @@ const LoginComponent = () => {
 	const [serialPort, setSerialPort] = useState(null)
 	const test = usePathname()
 
-	useEffect(() => {
-		const setupSerialPort = async () => {
-			try {
-				const port = await SerialPortAPI.open('/dev/ttyS8', { baudRate: 9600 })
-				console.log('Serial port opened successfully')
+	// openSerialPort()
 
-				const subscription = port.onReceived((buff) => {
-					console.log('Received data:', buff.toString('hex'))
-				})
+	const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
-				setSerialPort(port)
-				// await port.send('010302BC00288588')
-				console.log('hh')
+	const setupSerial = async () => {
+		try {
+			const isOpen = await openSerialPort()
+			if (isOpen) {
+				console.log('✅ Writing single register...')
+				await writeSingleRegister(734, 0)
 
-				return () => {
-					subscription.remove()
-					port.close()
-					setSerialPort(null)
-				}
-			} catch (error) {
-				console.error('Error opening serial port:', error)
+				await delay(100) // Add a delay of 100ms
+
+				console.log('✅ Writing multiple registers...')
+				await writeMultipleRegisters(724, 11.11)
+
+				await closeSerialPort()
 			}
+		} catch (error) {
+			console.error('Error setting up serial port:', error)
 		}
-
-		setupSerialPort()
-
-		return () => {
-			if (serialPort) {
-				serialPort.close()
-				setSerialPort(null)
-			}
-		}
-	}, [])
+	}
 
 	const handleRFIDScan = (data) => {
 		console.log('Scanned RFID:', data)
@@ -93,6 +89,88 @@ const LoginComponent = () => {
 		}
 	}
 
+	const [config, setConfig] = useState()
+	useEffect(() => {
+		const loadConfig = async () => {
+			try {
+				const configString = await AsyncStorage.getItem('fuelDispenserConfig')
+				console.log(configString, '..')
+
+				// if (!configString) {
+				// 	return <Redirect href="/(tabs)/setup" />
+				// }
+
+				if (configString) {
+					setConfig(configString)
+				}
+
+				return null
+			} catch (error) {
+				console.error('Error loading config:', error)
+				throw error
+			}
+		}
+		loadConfig()
+
+		// clearConfig()
+	}, [])
+	console.log(config, 'this is config')
+	let isListening = false
+	const read = async () => {
+		isListening = true
+		try {
+			// const data = await serialPort.read()
+
+      //for integer(32bit)
+			// const data = await readMultipleRegisters(704, 2)
+			// console.log('Data read from serial port:', data)
+			// const floatValue = convertFloat(data[0], data[1])
+			// console.log('Converted Float:', floatValue?.toFixed(2))
+
+			while (isListening) {
+				try {
+					const data = await readMultipleRegisters(708, 1)
+					console.log('Data read from serial port:', data)
+				} catch (error) {
+					console.error('❌ Error reading data:', error)
+					// stopListening() // Stop on error
+					break
+				}
+        // setTimeout(() => {
+        //   isListening = false
+        // }
+        // , 3000)
+			}
+		} catch (error) {
+			console.error('Failed to read data:', error)
+		}
+	}
+
+	// while (isListening) {
+	// 	try {
+	// 		const data = await readSerialData() // Read data from serial port
+
+	// 		if (data) {
+	// 			console.log('🔹 Received Data:', data)
+
+	// 			// Example: Process received data
+	// 			if (data.includes('COMPLETE')) {
+	// 				console.log('✅ Dispensing complete. Navigating...')
+	// 				await closeSerialPort()
+	// 				router.push('/(tabs)/(dispenser)')
+	// 				stopListening() // Stop listening after navigation
+	// 				break // Exit loop
+	// 			}
+
+	// 			// Add more conditions if needed
+	// 		}
+	// 	} catch (error) {
+	// 		console.error('❌ Error reading data:', error)
+	// 		stopListening() // Stop on error
+	// 		break
+	// 	}
+	// }
+
 	return (
 		<SafeAreaView style={styles.container}>
 			<ImageBackground source={backImg} resizeMode="cover" style={styles.image}>
@@ -106,8 +184,11 @@ const LoginComponent = () => {
 								</Text>
 								<HiddenRFIDInput onRFIDScan={handleRFIDScan} />
 							</View>
-							<TouchableOpacity onPress={sendSerialData} style={styles.button}>
-								<Text style={styles.buttonText}>Send Serial Command</Text>
+							{/* <TouchableOpacity onPress={sendSerialData} style={styles.button}>
+                <Text style={styles.buttonText}>Send Serial Command</Text>
+              </TouchableOpacity> */}
+							<TouchableOpacity onPress={() => read()} style={styles.button}>
+								<Text style={styles.buttonText}>Read Serial Data</Text>
 							</TouchableOpacity>
 						</View>
 					</View>

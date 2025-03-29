@@ -1,8 +1,15 @@
+import { nozConfig } from '@/store/library'
 import { defaultStyles } from '@/styles'
 import { Stack } from 'expo-router'
+import { useEffect } from 'react'
 import { View } from 'react-native'
 
 const DispenserLayout = () => {
+	const { getConfig } = nozConfig()
+	useEffect(()=>{
+		getConfig()
+	}
+	,[])
 	// const { setToken, items } = Token()
 
 	// const getToken = async () => {

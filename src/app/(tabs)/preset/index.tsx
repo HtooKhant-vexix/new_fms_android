@@ -2,15 +2,18 @@ import ControlButton from '@/app/components/ControlButton'
 import FunctionKey from '@/app/components/FunctionKey'
 import Input from '@/app/components/Input'
 import NumberKeyboard from '@/app/components/NumberKeyboard'
+import { closeSerialPort, openSerialPort, writeSingleRegister } from '@/command/controlDispenser'
 import { colors } from '@/constants/tokens'
-import { DevControl, Token } from '@/store/library'
+import { DevControl } from '@/store/library'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useGlobalSearchParams, useLocalSearchParams } from 'expo-router'
 import React, { useEffect, useState } from 'react'
 import { ImageBackground, SafeAreaView, StyleSheet, Text, View } from 'react-native'
+import * as Keychain from 'react-native-keychain'
 import { ActivityIndicator, Modal, Portal } from 'react-native-paper'
 import tw from 'twrnc'
 import backImg from '../../../../assets/bg.png'
+import { permitCommand, presetCommand } from '../../../command/control'
 
 const index = () => {
 	const glob = useGlobalSearchParams()
@@ -32,6 +35,25 @@ const index = () => {
 		}
 	}
 
+	const [isDirectMode, setIsDirectMode] = useState(false)
+	// const router = useRouter()
+	// console.log(isDirectMode, '---- this is mode')
+
+	useEffect(() => {
+		const loadMode = async () => {
+			try {
+				const storedMode = await AsyncStorage.getItem('Mode')
+				console.log(storedMode, 'this is stored mode')
+				if (storedMode !== null) {
+					setIsDirectMode(storedMode === 'Direct')
+				}
+			} catch (error) {
+				console.error('Error loading mode:', error)
+			}
+		}
+		loadMode()
+	})
+
 	const handleKeyPressPrice = (key: string) => {
 		if (key === 'delete') {
 			setPrice((prev) => prev.slice(0, -1))
@@ -40,11 +62,41 @@ const index = () => {
 		}
 	}
 
+	const setupSerial = async () => {
+		const isOpen = await openSerialPort()
+		if (isOpen) {
+			await writeSingleRegister(734, 0) // Example: Write value 3000 to register 728
+			await closeSerialPort()
+			console.log('clicked')
+		}
+	}
+
 	const toggleKeyboard = () => {
 		setIsKeyboardVisible(!isKeyboardVisible)
 	}
+	const [token, setToken] = useState('')
+	// console.log(token, 'this is token kkkkk')
 
-	const { items: token } = Token()
+	useEffect(() => {
+		const fetchToken = async () => {
+			try {
+				const credentials = await Keychain.getGenericPassword()
+				if (credentials && credentials.password) {
+					setToken(credentials.password) // Store the token in state
+					// console.log('Token retrieved:', credentials.password)
+				} else {
+					console.log('No token found')
+				}
+			} catch (error) {
+				console.error('Error retrieving token', error)
+			}
+		}
+
+		fetchToken() // Call the async function inside useEffect
+	}, [])
+
+	// const { items: token } = Token()
+	// const token = getToken()
 
 	const FuelType = ['005-Premium Diesel', '004-Diesel', '001-Octane Ron(92)', '002-Octane Ron(95)']
 
@@ -135,6 +187,7 @@ const index = () => {
 	}
 
 	const handleStart = () => {
+		console.log(token, '.......')
 		const route = `detail-sale?depNo=${glob?.dis}&nozzleNo=${glob?.noz}`
 		permitFun(route, permitObj, token)
 		setPrice('')
@@ -150,10 +203,10 @@ const index = () => {
 		setPrice('')
 	}
 
-	console.log(presetLoading, 'presetLoading')
+	// console.log(presetLoading, 'presetLoading')
 
 	const funKeyHandler = (index: number, field: string) => {
-		console.log(funData[index], 'this is index and field')
+		// console.log(funData[index], 'this is index and field')
 		const data = funData[index]
 		if (data.liter == '-') {
 			setPrice(data?.price?.toString())
@@ -168,6 +221,7 @@ const index = () => {
 
 	const showModal = () => setVisible(true)
 	const hideModal = () => setVisible(false)
+	// console.log(liter?.toFixed(2), 'this is liter')
 
 	return (
 		<SafeAreaView style={styles.container}>
@@ -197,7 +251,23 @@ const index = () => {
 						/>
 					</View>
 					<View>
-						<ControlButton preset={handlePreset} start={handleStart} clear={handleClear} />
+						<ControlButton
+							preset={
+								isDirectMode
+									? () => {
+											handlePreset(), presetCommand(Number(liter)?.toFixed(2))
+										}
+									: handlePreset
+							}
+							start={
+								isDirectMode
+									? () => {
+											handleStart(), permitCommand()
+										}
+									: handleStart
+							}
+							clear={handleClear}
+						/>
 					</View>
 				</View>
 				<NumberKeyboard

@@ -61,7 +61,7 @@ const Header = () => {
 						source={require('../../../assets/six_logo.png')} // Replace with your logo
 						style={styles.logo}
 					/>
-					<Text style={tw`text-[45px] ml-[-25px] mb-[-15px] font-bold text-[${colors.primary}]`}>
+					<Text style={tw`text-[45px] ml-[-30px] font-bold text-[${colors.primary}]`}>
 						Sixth Kendra
 					</Text>
 				</View>
@@ -102,11 +102,11 @@ const styles = StyleSheet.create({
 		backgroundColor: '#ffffff',
 		borderBottomWidth: 1,
 		borderBottomColor: '#e0e0e0',
-		height: 110,
+		height: 90,
 	},
 	logo: {
 		width: 140,
-		height: 70,
+		height: 55,
 		// backgroundColor: 'red',
 		resizeMode: 'contain',
 	},
