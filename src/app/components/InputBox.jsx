@@ -2,7 +2,7 @@ import React from 'react'
 import { StyleSheet, Text, TextInput, View } from 'react-native'
 import tw from 'twrnc'
 
-const InputBox = ({ label }) => {
+const InputBox = ({ label, setValue, value }) => {
 	return (
 		<View style={tw`w-[45%]`}>
 			<Text style={tw`text-[30px]  ml-2 mb-3 text-gray-500`}>{label}:</Text>
@@ -13,6 +13,8 @@ const InputBox = ({ label }) => {
 					{value}
 				</Text> */}
 			<TextInput
+			    onChangeText={setValue}
+				value={value}
 				placeholder="-"
 				style={tw`bg-gray-300 text-center text-gray-500 mx-auto bg-slate-200  border border-gray-400 rounded-md pl-6 w-full h-[80px] mb-4 focus:bg-gray-200 flex items-end  text-gray-700 flex pr-7 text-[30px]`}
 			/>

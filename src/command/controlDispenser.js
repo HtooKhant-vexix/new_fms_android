@@ -55,7 +55,6 @@ const floatToRegisters = (floatValue) => {
 	return [(combined >> 16) & 0xffff, combined & 0xffff]
 }
 
-
 // ✅ Convert Two 16-bit Registers to Float
 export const convertFloat = (highReg, lowReg) => {
 	let rawValue = (highReg << 16) | (lowReg & 0xffff)
@@ -67,6 +66,84 @@ export const convertFloat = (highReg, lowReg) => {
 
 const highByte = (value) => (value >> 8) & 0xff
 const lowByte = (value) => value & 0xff
+
+export const readMultipleRegisters = async (startRegister, numRegisters, sId = 1) => {
+	const isOpen = await openSerialPort()
+	// console.log('✅ Reading multiple registers...')
+	try {
+		if (!isOpen) {
+			console.warn('⚠️ Serial port is not open')
+			return null
+		}
+		// Build request packet
+		const slaveId = sId
+		const functionCode = 0x03
+		const packet = Buffer.from([
+			slaveId,
+			functionCode,
+			(startRegister >> 8) & 0xff,
+			startRegister & 0xff,
+			(numRegisters >> 8) & 0xff,
+			numRegisters & 0xff,
+		])
+
+		const crc = calculateCRC(packet)
+		const fullPacket = Buffer.concat([packet, crc])
+
+		// Send request
+		await serialPort.send(fullPacket.toString('hex'))
+		// console.log(
+		// 	'📤 Sent request (hex):',
+		// 	fullPacket
+		// 		.toString('hex')
+		// 		.match(/.{1,2}/g)
+		// 		.join(' '),
+		// )
+
+		// Read response
+		return new Promise((resolve) => {
+			let response = Buffer.alloc(0)
+			serialPort.onReceived((data) => {
+				response = Buffer.concat([response, data])
+				// Check if we have enough bytes for the expected response
+				if (response.length >= 3 + numRegisters * 2 + 2) {
+					resolve(parseResponse(response, slaveId, functionCode, numRegisters, startRegister))
+				}
+			})
+		})
+	} catch (error) {
+		console.error('❌ Error with SerialPort:', error)
+		return null
+	}
+}
+
+// ✅ Parse Response
+const parseResponse = (response, slaveId, functionCode, numRegisters, startRegister) => {
+	if (response[0] !== slaveId || response[1] !== functionCode) {
+		console.error('Invalid response:', response.toString('hex'))
+		return
+	}
+
+	const byteCount = response[2]
+	if (byteCount !== numRegisters * 2) {
+		console.error(`Expected ${numRegisters * 2} bytes, got ${byteCount}`)
+		return
+	}
+
+	const data = response.slice(3, 3 + byteCount)
+	const registers = []
+	for (let i = 0; i < byteCount; i += 2) {
+		registers.push((data[i] << 8) | data[i + 1])
+	}
+
+	// console.log(`✅ Read ${registers.length} registers from ${startRegister}:`, registers)
+
+	const receivedCRC = (response[response.length - 1] << 8) | response[response.length - 2]
+	const calculatedCRC = calculateCRC(response.slice(0, -2))
+	// console.log('CRC Valid:', receivedCRC === calculatedCRC)
+
+	return registers
+}
 
 // ✅ Function to Write Multiple Registers (32-bit float)
 export const writeMultipleRegisters = async (startRegister, floatValue) => {
@@ -213,81 +290,3 @@ export const writeSingleRegister = async (register, value) => {
 // 	const calculatedCRC = calculateCRC(response.slice(0, -2))
 // 	console.log('CRC Valid:', receivedCRC === calculatedCRC)
 // }
-
-export const readMultipleRegisters = async (startRegister, numRegisters) => {
-	const isOpen = await openSerialPort()
-	// console.log('✅ Reading multiple registers...')
-	try {
-		if (!isOpen) {
-			console.warn('⚠️ Serial port is not open')
-			return null
-		}
-		// Build request packet
-		const slaveId = 1
-		const functionCode = 0x03
-		const packet = Buffer.from([
-			slaveId,
-			functionCode,
-			(startRegister >> 8) & 0xff,
-			startRegister & 0xff,
-			(numRegisters >> 8) & 0xff,
-			numRegisters & 0xff,
-		])
-
-		const crc = calculateCRC(packet)
-		const fullPacket = Buffer.concat([packet, crc])
-
-		// Send request
-		await serialPort.send(fullPacket.toString('hex'))
-		// console.log(
-		// 	'📤 Sent request (hex):',
-		// 	fullPacket
-		// 		.toString('hex')
-		// 		.match(/.{1,2}/g)
-		// 		.join(' '),
-		// )
-
-		// Read response
-		return new Promise((resolve) => {
-			let response = Buffer.alloc(0)
-			serialPort.onReceived((data) => {
-				response = Buffer.concat([response, data])
-				// Check if we have enough bytes for the expected response
-				if (response.length >= 3 + numRegisters * 2 + 2) {
-					resolve(parseResponse(response, slaveId, functionCode, numRegisters, startRegister))
-				}
-			})
-		})
-	} catch (error) {
-		console.error('❌ Error with SerialPort:', error)
-		return null
-	}
-}
-
-// ✅ Parse Response
-const parseResponse = (response, slaveId, functionCode, numRegisters, startRegister) => {
-	if (response[0] !== slaveId || response[1] !== functionCode) {
-		console.error('Invalid response:', response.toString('hex'))
-		return
-	}
-
-	const byteCount = response[2]
-	if (byteCount !== numRegisters * 2) {
-		console.error(`Expected ${numRegisters * 2} bytes, got ${byteCount}`)
-		return
-	}
-
-	const data = response.slice(3, 3 + byteCount)
-	const registers = []
-	for (let i = 0; i < byteCount; i += 2) {
-		registers.push((data[i] << 8) | data[i + 1])
-	}
-
-	// console.log(`✅ Read ${registers.length} registers from ${startRegister}:`, registers)
-
-	const receivedCRC = (response[response.length - 1] << 8) | response[response.length - 2]
-	const calculatedCRC = calculateCRC(response.slice(0, -2))
-	// console.log('CRC Valid:', receivedCRC === calculatedCRC)
-
-	return registers
-}

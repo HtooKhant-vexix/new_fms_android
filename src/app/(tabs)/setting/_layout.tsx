@@ -1,3 +1,4 @@
+import Header from '@/app/components/Header'
 import { defaultStyles } from '@/styles'
 import { Stack } from 'expo-router'
 import { ImageBackground, StyleSheet, View } from 'react-native'
@@ -6,6 +7,7 @@ const InfoLayout = () => {
 	return (
 		<View style={defaultStyles.container}>
 			<ImageBackground source={backImg} resizeMode="cover" style={styles.image}>
+				<Header />
 				<Stack>
 					<Stack.Screen
 						name="index"
@@ -23,6 +25,13 @@ const InfoLayout = () => {
 					/>
 					<Stack.Screen
 						name="changeMode"
+						options={{
+							headerShown: false,
+							animation: 'none',
+						}}
+					/>
+					<Stack.Screen
+						name="priceChg"
 						options={{
 							headerShown: false,
 							animation: 'none',
@@ -56,7 +65,8 @@ const styles = StyleSheet.create({
 	},
 	image: {
 		flex: 1,
-		justifyContent: 'center',
+		justifyContent: "flex-start",
+		// justifyContent: 'center',
 	},
 	title: {
 		fontSize: 24,

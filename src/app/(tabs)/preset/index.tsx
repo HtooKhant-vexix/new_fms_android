@@ -134,6 +134,8 @@ const index = () => {
 		dataGet()
 	}, [])
 
+	console.log(glob, 'this is glob')
+
 	const literData = {
 		nozzleNo: glob?.noz,
 		fuelType: glob?.fuel,

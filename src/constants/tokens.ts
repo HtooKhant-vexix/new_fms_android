@@ -29,7 +29,7 @@ export async function getToken() {
 
 export const colors = {
 	background: '#fff',
-	primary: '#33b0f9',
+	primary: '#0059f4',
 	data: '#003b8f',
 	text: '#000',
 	textMuted: '#9ca3af',

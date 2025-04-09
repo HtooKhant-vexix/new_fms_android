@@ -89,7 +89,7 @@ const App = () => {
 		<SafeAreaProvider>
 			<PaperProvider>
 				{/* <GestureHandlerRootView style={{ flex: 1 }}> */}
-				{location == '/login' ? null : <Header />}
+				{/* {location == '/login' ? null : <Header />} */}
 				{/* <Header /> */}
 				{/* {config ? <RootNavigation /> : <SetupWizard />} */}
 				<RootNavigation />

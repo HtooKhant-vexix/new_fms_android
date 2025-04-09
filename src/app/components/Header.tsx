@@ -92,14 +92,14 @@ const Header = () => {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: '#f5f5f5',
+		// backgroundColor: '#f5f5f5',
 	},
 	header: {
 		flexDirection: 'row',
 		justifyContent: 'space-between',
 		alignItems: 'center',
 		padding: 16,
-		backgroundColor: '#ffffff',
+		// backgroundColor: '#ffffff',
 		borderBottomWidth: 1,
 		borderBottomColor: '#e0e0e0',
 		height: 90,

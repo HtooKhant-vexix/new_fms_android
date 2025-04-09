@@ -20,6 +20,8 @@ const CardComponent = () => {
 
 	// console.log('Local:', local, 'Global:', glob)
 	const [category, setCategory] = useState({ label: 'Cycle', value: 1 })
+	const [number, setNumber] = useState()
+
 	const [payment, setPayment] = useState({
 		id: 1,
 		label: 'Cash',
@@ -28,8 +30,8 @@ const CardComponent = () => {
 
 	const data = {
 		payment: payment?.value,
-		number: '333',
-		category: category?.value,
+		number: number?number: '-',
+		category: category?.label,
 		dis: glob?.dis,
 		noz: glob?.noz,
 		price: glob?.price,
@@ -56,7 +58,7 @@ const CardComponent = () => {
 							value={payment}
 							setValue={setPayment}
 						/>
-						<InputBox label="Vehicle Number" />
+						<InputBox setValue={setNumber} value={number}  label="Vehicle Number" />
 						<TouchableOpacity
 							onPress={() => router.push('/(tabs)/info/auth')}
 							style={tw`w-[45%] border-2 border-[${colors.primary}] mt-12 rounded-md flex items-center justify-center  h-[80px]`}
@@ -66,6 +68,13 @@ const CardComponent = () => {
 						<TouchableOpacity
 							onPress={() => {
 								router.push('/(tabs)/preset'), router.setParams(data)
+								setCategory({ label: 'Cycle', value: 1 })
+								setPayment({
+									id: 1,
+									label: 'Cash',
+									value: 'Cash',
+								})
+								setNumber()
 							}}
 							style={tw`w-[96%] bg-[${colors.primary}] rounded-md flex items-center justify-center  h-[80px]`}
 						>

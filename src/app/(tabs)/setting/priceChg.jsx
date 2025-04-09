@@ -10,19 +10,31 @@ import {
 	TouchableOpacity,
 	View,
 } from 'react-native'
-import { Button, TextInput } from 'react-native-paper'
+import { Button } from 'react-native-paper'
+import Toast from 'react-native-toast-message'
 import tw from 'twrnc'
 import backImg from '../../../../assets/bg.png'
-import Toast from 'react-native-toast-message'
+import { DevControl, nozConfig, Token } from '../../../store/library'
+import Input from './Input'
 
-const InfoComponent = () => {
+const priceChg = () => {
 	const glob = useGlobalSearchParams()
 	const local = useLocalSearchParams()
+	const [dispensers, setDispensers] = useState([])
+	const { items: configNoz } = nozConfig()
+
+	const filData =
+		configNoz &&
+		JSON.parse(configNoz)?.nozzleConfigs?.map((nozzle) => nozzle?.number.padStart(2, '0'))
 
 	const test = usePathname()
 	const [isKeyboardVisible, setIsKeyboardVisible] = useState(false)
 	const [condi, setCondi] = useState(false)
 	const [funData, setFunData] = useState()
+	const [nozOne, setNozOne] = useState()
+	const [nozTwo, setNozTwo] = useState()
+	const { setToken, items: token, isRefresh } = Token()
+	const nozData = dispensers.filter((dispenser) => filData?.includes(dispenser?.nozzle_no))
 
 	const storeFun = async (value) => {
 		try {
@@ -92,8 +104,23 @@ const InfoComponent = () => {
 		phone2,
 	}
 
-	console.log(funData)
-	console.log(data)
+	const { getDev, dev, alert } = DevControl()
+
+	useEffect(() => {
+		if (token) {
+			getDev(token)
+		}
+	}, [token])
+
+	useEffect(() => {
+		if (dev?.result) {
+			setDispensers(dev.result)
+		}
+	}, [dev])
+
+	console.log('====================================')
+	console.log(filData, nozData)
+	console.log('====================================')
 
 	return (
 		<SafeAreaView style={styles.container}>
@@ -144,92 +171,55 @@ const InfoComponent = () => {
 
 					{/* {funData && ( */}
 					<View style={tw`flex w-[825px] items-center gap-8 py-4`}>
-						<Text style={tw`text-4xl font-semibold`}>Station's Information</Text>
+						<Text style={tw`text-4xl font-semibold`}>Price Change</Text>
 						<View style={tw`flex w-full`}>
-							<View style={tw`flex flex-row justify-around h-[70px] w-full`}>
-								<TextInput
-									placeholder="Station Name"
-									style={tw`w-[45%] text-2xl`}
-									onChangeText={(e) => setName(e)}
-									value={name}
-									// right={<TextInput.Icon icon="email" />}
-								/>
-								<TextInput
-									placeholder="Address"
-									style={tw`w-[45%] text-2xl`}
-									value={address}
-									onChangeText={(e) => setAddress(e)}
+							<View style={tw`flex flex-row flex-wrap justify-around h-[70px] w-full`}>
+								{nozData?.map((e) => (
+									<Input e={e} />
+								))}
 
-									// right={<TextInput.Icon icon="Locatoin On" />}
-								/>
+								{/* <View style={tw`w-[45%]`}>
+									<TextInput
+										placeholder="Nozzle Two"
+										style={tw`w-full text-2xl`}
+										onChangeText={(e) => setNozTwo(e)}
+										value={nozTwo}
+										// right={<TextInput.Icon icon="email" />}
+									/>
+								</View> */}
 							</View>
-							<View style={tw`flex flex-row justify-around h-[70px] mt-6 w-full`}>
-								<TextInput
-									placeholder="City"
-									style={tw`w-[45%] text-2xl`}
-									onChangeText={(e) => setCity(e)}
-									value={city}
 
-									// right={<TextInput.Icon icon="email" />}
-								/>
-								<TextInput
-									placeholder="State"
-									style={tw`w-[45%] text-2xl`}
-									onChangeText={(e) => setState(e)}
-									value={state}
-
-									// right={<TextInput.Icon icon="eye" />}
-								/>
-							</View>
-							<View style={tw`flex flex-row justify-around h-[70px] mt-6 w-full`}>
-								<TextInput
-									placeholder="Phone 1"
-									style={tw`w-[45%] text-2xl`}
-									onChangeText={(e) => setPhone1(e)}
-									value={phone1}
-
-									// right={<TextInput.Icon icon="email" />}
-								/>
-								<TextInput
-									placeholder="Phone 2"
-									style={tw`w-[45%] text-2xl`}
-									onChangeText={(e) => setPhone2(e)}
-									value={phone2}
-
-									// right={<TextInput.Icon icon="eye" />}
-								/>
-							</View>
-							<Button
+							{/* <Button
 								// icon="camera"
 								// loading={true}
 								buttonColor={colors.primary}
 								mode="contained"
-								style={tw`py-2 rounded-md w-[20%] ml-auto mt-6 mr-6 `}
+								style={tw`py-2 rounded-md w-[20%] ml-auto mt-18 mr-6 `}
 								onPress={() => storeFun(data)}
 								uppercase={true}
 							>
 								Save
-							</Button>
+							</Button> */}
 						</View>
 					</View>
 					{/* )} */}
 				</View>
 				{/* {funData && (
-					<NumberKeyboard
-						isVisible={isKeyboardVisible}
-						literValue={funData[cardIndex]?.liter}
-						priceValue={funData[cardIndex]?.price}
-						onKeyPress={handleKeyPress}
-						condi={cardField}
-						onClose={() => setIsKeyboardVisible(false)}
-					/>
-				)} */}
+                    <NumberKeyboard
+                        isVisible={isKeyboardVisible}
+                        literValue={funData[cardIndex]?.liter}
+                        priceValue={funData[cardIndex]?.price}
+                        onKeyPress={handleKeyPress}
+                        condi={cardField}
+                        onClose={() => setIsKeyboardVisible(false)}
+                    />
+                )} */}
 			</ImageBackground>
 		</SafeAreaView>
 	)
 }
 
-export default InfoComponent
+export default priceChg
 
 const styles = StyleSheet.create({
 	container: {

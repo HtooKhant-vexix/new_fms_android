@@ -135,20 +135,20 @@ const AuthComponent = () => {
 				console.log('wkkkkeeeeeeeeeeeek')
 				setFunData({
 					1: {
-						liter: '',
-						price: '',
+						liter: '-',
+						price: '-',
 					},
 					2: {
-						liter: '',
-						price: '',
+						liter: '-',
+						price: '-',
 					},
 					3: {
-						liter: '',
-						price: '',
+						liter: '-',
+						price: '-',
 					},
 					4: {
-						liter: '',
-						price: '',
+						liter: '-',
+						price: '-',
 					},
 				})
 			}
@@ -177,7 +177,7 @@ const AuthComponent = () => {
 				[key]: {
 					...prevData[key],
 					[field]: prevData[key][field] + newValue,
-					['price']: '',
+					['price']: '-',
 				},
 			}))
 		} else {
@@ -186,7 +186,7 @@ const AuthComponent = () => {
 				[key]: {
 					...prevData[key],
 					[field]: prevData[key][field] + newValue,
-					['liter']: '',
+					['liter']: '-',
 				},
 			}))
 		}
@@ -199,7 +199,7 @@ const AuthComponent = () => {
 				[key]: {
 					...prevData[key],
 					[field]: String(prevData[key][field])?.slice(0, -1),
-					['price']: '',
+					['price']: '-',
 				},
 			}))
 		} else {
@@ -208,7 +208,7 @@ const AuthComponent = () => {
 				[key]: {
 					...prevData[key],
 					[field]: String(prevData[key][field])?.slice(0, -1),
-					['liter']: '',
+					['liter']: '-',
 				},
 			}))
 		}
@@ -249,17 +249,20 @@ const AuthComponent = () => {
 								Mode
 							</Text>
 						</TouchableOpacity>
+						<TouchableOpacity
+							onPress={() => router.push(`/(tabs)/setting/priceChg`)}
+							style={tw`flex flex-row w-33  items-start`}
+						>
+							<Text
+								style={tw`text-[20px] font-semibold rounded-md bg-[${colors.primary}] w-full text-center py-4 text-white`}
+							>
+								Price
+							</Text>
+						</TouchableOpacity>
 					</View>
-
 					{funData ? (
 						<View style={tw`flex justify-center flex-row items-center gap-8 py-4`}>
 							<View>
-								<View style={tw`flex flex-row justify-between mt-[-15px] items-center`}>
-									<View style={tw`flex flex-row items-center`}>
-										<Text style={tw`text-[30px] ml-68 mr-20 mb-[-10px]`}>Liter:</Text>
-										<Text style={tw`text-[30px] ml-40 mb-[-10px] `}>Price:</Text>
-									</View>
-								</View>
 								{[...Array(4)].map((e, index) => (
 									<FunCard
 										onClick={updateData}
@@ -272,7 +275,6 @@ const AuthComponent = () => {
 									/>
 								))}
 							</View>
-
 							<TouchableOpacity
 								onPress={() => {
 									storeFun(funData)
@@ -330,7 +332,8 @@ const styles = StyleSheet.create({
 	},
 	image: {
 		flex: 1,
-		justifyContent: 'center',
+		// justifyContent: 'center',
+		paddingTop: 18,
 	},
 	title: {
 		fontSize: 24,

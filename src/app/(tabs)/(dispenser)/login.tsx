@@ -70,7 +70,7 @@ const LoginComponent = () => {
 					}
 				})
 				.catch((e) => {
-					console.error('Login failed:', e)
+					console.error('Login failed:', e?.response)
 					router.push('/(tabs)/(dispenser)/fail')
 				})
 		}

@@ -1,3 +1,4 @@
+import Header from '@/app/components/Header'
 import SetupWizard from '@/app/components/Setup'
 import Voucher from '@/app/components/Voucher'
 import { colors } from '@/constants/tokens'
@@ -173,29 +174,32 @@ const Index = () => {
 	console.log(loadConfig(), 'this is load config')
 
 	return (
-		<View style={tw`px-6 py-2`}>
-			{items?.result ? (
-				<FlatList
-					data={items?.result}
-					contentContainerStyle={{ paddingTop: 10, paddingBottom: 128 }}
-					ListFooterComponent={ItemDivider}
-					ItemSeparatorComponent={ItemDivider}
-					keyExtractor={(item, index) => `key-${index}`}
-					renderItem={({ item: track }) => (
-						<View>
-							<Voucher onClick={() => sentBtn(track)} data={track} />
-						</View>
-					)}
-				/>
-			) : (
-				<ActivityIndicator
-					animating={true}
-					style={tw`mt-[200px]`}
-					size={80}
-					color={colors.primary}
-				/>
-			)}
-		</View>
+		<>
+			<Header />
+			<View style={tw`px-6 py-2`}>
+				{items?.result ? (
+					<FlatList
+						data={items?.result}
+						contentContainerStyle={{ paddingTop: 10, paddingBottom: 128 }}
+						ListFooterComponent={ItemDivider}
+						ItemSeparatorComponent={ItemDivider}
+						keyExtractor={(item, index) => `key-${index}`}
+						renderItem={({ item: track }) => (
+							<View>
+								<Voucher onClick={() => sentBtn(track)} data={track} />
+							</View>
+						)}
+					/>
+				) : (
+					<ActivityIndicator
+						animating={true}
+						style={tw`mt-[200px]`}
+						size={80}
+						color={colors.primary}
+					/>
+				)}
+			</View>
+		</>
 	)
 
 }

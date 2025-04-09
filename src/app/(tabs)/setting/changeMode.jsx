@@ -81,6 +81,16 @@ const ChangeMode = () => {
 								Mode
 							</Text>
 						</TouchableOpacity>
+						<TouchableOpacity
+							onPress={() => router.push(`/(tabs)/setting/priceChg`)}
+							style={tw`flex flex-row w-33  items-start`}
+						>
+							<Text
+								style={tw`text-[20px] font-semibold rounded-md bg-[${colors.primary}] w-full text-center py-4 text-white`}
+							>
+								Price
+							</Text>
+						</TouchableOpacity>
 					</View>
 					<View style={styles.card_con}>
 						<Text style={styles.title}>
@@ -118,7 +128,7 @@ const styles = StyleSheet.create({
 		backgroundColor: '#fff',
 		borderRadius: 12,
 		padding: 16,
-		margin: 16,
+		// margin: 16,
 		shadowColor: '#000',
 		shadowOffset: {
 			width: 0,
@@ -134,7 +144,8 @@ const styles = StyleSheet.create({
 	},
 	image: {
 		flex: 1,
-		justifyContent: 'center',
+		// justifyContent: 'center',
+		paddingTop: 18
 	},
 	title: {
 		fontSize: 38,
