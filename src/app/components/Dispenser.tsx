@@ -2,20 +2,20 @@ import { colors } from '@/constants/tokens'
 import { Buffer } from 'buffer'
 import React, { useEffect, useRef, useState } from 'react'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import SerialPortAPI from 'react-native-serial-port-api'
+import SerialPortAPI, { SerialPort } from 'react-native-serial-port-api'
 import tw from 'twrnc'
 
-const Dispenser = ({ title, price, noz, addr }) => {
+const Dispenser = ({ price, addr, click, noz, dis, title, description, saleLiter, totalPrice }) => {
 	// const serialPort = openSerialPort()
-	const nozAddr = addr.find((e) => e.number === noz).address
+	const nozAddr = addr.find((e: { number: any }) => e.number === noz)?.address
 
 	const [liveData, setLiveData] = useState(0.0)
 	const [tPrice, setTPrice] = useState(0)
 	const isListeningRef = useRef(false) // Use `useRef` instead of `useState`
 
-	let serialPort = null
+	let serialPort: SerialPort
 
-	const calculateCRC = (bytes) => {
+	const calculateCRC = (bytes: Buffer<ArrayBuffer>) => {
 		let crc = 0xffff
 		for (let byte of bytes) {
 			crc = crc16Update(crc, byte)
@@ -23,7 +23,7 @@ const Dispenser = ({ title, price, noz, addr }) => {
 		return Buffer.from([crc & 0xff, (crc >> 8) & 0xff])
 	}
 
-	const crc16Update = (crc, a) => {
+	const crc16Update = (crc: number, a: number) => {
 		crc ^= a
 		for (let i = 0; i < 8; ++i) {
 			crc = crc & 1 ? (crc >> 1) ^ 0xa001 : crc >> 1
@@ -37,7 +37,7 @@ const Dispenser = ({ title, price, noz, addr }) => {
 			serialPort = await SerialPortAPI.open(portName, { baudRate })
 			// console.log('✅ Serial port opened successfully')
 
-			serialPort.onReceived((buff) => {
+			serialPort.onReceived(() => {
 				// console.log('📩 Received data:', buff.toString('hex'))
 			})
 
@@ -48,7 +48,7 @@ const Dispenser = ({ title, price, noz, addr }) => {
 		}
 	}
 
-	const readMultipleRegisters = async (startRegister, numRegisters, sId = 1) => {
+	const readMultipleRegisters = async (startRegister: number, numRegisters: number, sId = 1) => {
 		const isOpen = await openSerialPort()
 		// console.log('✅ Reading multiple registers...')
 		try {
@@ -84,7 +84,7 @@ const Dispenser = ({ title, price, noz, addr }) => {
 			// Read response
 			return new Promise((resolve) => {
 				let response = Buffer.alloc(0)
-				serialPort.onReceived((data) => {
+				serialPort.onReceived((data: Uint8Array<ArrayBufferLike>) => {
 					response = Buffer.concat([response, data])
 					// Check if we have enough bytes for the expected response
 					if (response.length >= 3 + numRegisters * 2 + 2) {
@@ -99,7 +99,12 @@ const Dispenser = ({ title, price, noz, addr }) => {
 	}
 
 	// ✅ Parse Response
-	const parseResponse = (response, slaveId, functionCode, numRegisters, startRegister) => {
+	const parseResponse = (
+		response: string | any[] | Buffer<ArrayBuffer>,
+		slaveId: number,
+		functionCode: number,
+		numRegisters: number,
+	) => {
 		if (response[0] !== slaveId || response[1] !== functionCode) {
 			console.error('Invalid response:', response.toString('hex'))
 			return
@@ -119,8 +124,6 @@ const Dispenser = ({ title, price, noz, addr }) => {
 
 		// console.log(`✅ Read ${registers.length} registers from ${startRegister}:`, registers)
 
-		const receivedCRC = (response[response.length - 1] << 8) | response[response.length - 2]
-		const calculatedCRC = calculateCRC(response.slice(0, -2))
 		// console.log('CRC Valid:', receivedCRC === calculatedCRC)
 
 		return registers
@@ -130,48 +133,40 @@ const Dispenser = ({ title, price, noz, addr }) => {
 		return () => stopListening()
 	}, [])
 
-	const read = async () => {
-		isListeningRef.current = true // Update ref, not state
-
-		try {
-			while (isListeningRef.current) {
-				// Check ref, not state
-				try {
-					console.log(nozAddr)
-					const data = await readMultipleRegisters(Number(nozAddr) + 8, 1)
-					setLiveData(data[0])
-					setTPrice(data[0] * price)
-				} catch (error) {
-					console.error('Error reading data:', error)
-					stopListening()
-					break
-				}
-			}
-		} catch (error) {
-			console.error('Failed to read data:', error)
-		}
-	}
-
 	const stopListening = () => {
 		isListeningRef.current = false // Update ref to stop loop
 	}
 
 	return (
 		<View style={styles.card}>
-			<TouchableOpacity onPress={read} style={styles.cardContent}>
+			<TouchableOpacity
+				onPress={() => {
+					click()
+					// router.push('/(tabs)/(dispenser)/auth'),
+					// 	router.setParams({
+					// 		noz: noz,
+					// 		dis: dis,
+					// 		price: price,
+					// 		fuel: title,
+					// 	})
+				}}
+				style={styles.cardContent}
+			>
 				<View style={tw`-mt-2`}>
 					<View style={tw`flex flex-row gap-6 items-center justify-between pl-1`}>
-						<Text style={tw`text-[34px] rounded-md mt-1 font-500 text-[${colors.primary}]`}>Nozzle - {noz}</Text>
+						<Text style={tw`text-[34px] rounded-md mt-1 font-500 text-[${colors.primary}]`}>
+							Nozzle - {noz}
+						</Text>
 						<Text style={styles.cardDescription}>SALE LITER :</Text>
 					</View>
 					<View style={tw`flex rounded-lg flex-row gap-2 items-center`}>
-						<Text style={styles.liveData}>{liveData?.toFixed(3)}</Text>
+						<Text style={styles.liveData}>{saleLiter?.toFixed(3)}</Text>
 					</View>
 				</View>
 				<View style={tw`mt-[-15px]`}>
 					<Text style={styles.cardDescription}>TOTAL PRICE :</Text>
 					<View style={tw`flex rounded-lg flex-row gap-2 items-center`}>
-						<Text style={styles.liveData}>{tPrice}</Text>
+						<Text style={styles.liveData}>{totalPrice}</Text>
 					</View>
 				</View>
 				<View style={tw`mt-[-15px]`}>

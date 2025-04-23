@@ -48,9 +48,9 @@ export default function DispenserScreen() {
 			key={dispenser?.id}
 			title={dispenser?.title}
 			description={dispenser?.description}
-			iconSource={dispenser?.iconSource}
+			// iconSource={dispenser?.iconSource}
 			price={dispenser?.price}
-			status={dispenser?.status}
+			// status={dispenser?.status}
 		/>
 	))
 
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
 		flexDirection: 'column',
 		flexWrap: 'wrap',
 		gap: 16,
-		display: "flex",
+		display: 'flex',
 		// paddingStart: 16,
 		alignItems: 'center',
 		justifyContent: 'center',

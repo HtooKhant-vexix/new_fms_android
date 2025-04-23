@@ -69,7 +69,6 @@ const DevControl = create((set) => ({
 				set({ alert: false })
 			}, 3000)
 		} catch (error) {
-			console.log(error.response)
 			set({ error, presetLoading: false })
 		}
 	},
@@ -122,7 +121,7 @@ const Token = create((set) => ({
 		}
 	},
 
-	refresh: async (data:boolean) => {
+	refresh: async (data: boolean) => {
 		set({ isLoading: true, error: null })
 		try {
 			set({ isRefresh: data })
@@ -140,8 +139,8 @@ const nozConfig = create((set) => ({
 	setConfig: async (config: string) => {
 		set({ isLoading: true, error: null })
 		try {
-			 await AsyncStorage.setItem('fuelDispenserConfig', JSON.stringify(config))
-      console.log( 'this is from library', JSON.stringify(config))
+			await AsyncStorage.setItem('fuelDispenserConfig', JSON.stringify(config))
+			console.log('this is from library', JSON.stringify(config))
 			set({ items: JSON.stringify(config), isLoading: false })
 		} catch (error) {
 			set({ error, isLoading: false })

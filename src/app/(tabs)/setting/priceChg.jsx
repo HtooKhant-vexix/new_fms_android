@@ -10,7 +10,6 @@ import {
 	TouchableOpacity,
 	View,
 } from 'react-native'
-import { Button } from 'react-native-paper'
 import Toast from 'react-native-toast-message'
 import tw from 'twrnc'
 import backImg from '../../../../assets/bg.png'
@@ -174,10 +173,9 @@ const priceChg = () => {
 						<Text style={tw`text-4xl font-semibold`}>Price Change</Text>
 						<View style={tw`flex w-full`}>
 							<View style={tw`flex flex-row flex-wrap justify-around h-[70px] w-full`}>
-								{nozData?.map((e) => (
-									<Input e={e} />
+								{nozData?.map((e, index) => (
+									<Input key={index} e={e} />
 								))}
-
 								{/* <View style={tw`w-[45%]`}>
 									<TextInput
 										placeholder="Nozzle Two"

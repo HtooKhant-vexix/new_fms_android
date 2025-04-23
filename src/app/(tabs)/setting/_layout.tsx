@@ -3,6 +3,7 @@ import { defaultStyles } from '@/styles'
 import { Stack } from 'expo-router'
 import { ImageBackground, StyleSheet, View } from 'react-native'
 import backImg from '../../../../assets/bg.png'
+
 const InfoLayout = () => {
 	return (
 		<View style={defaultStyles.container}>
@@ -65,7 +66,7 @@ const styles = StyleSheet.create({
 	},
 	image: {
 		flex: 1,
-		justifyContent: "flex-start",
+		justifyContent: 'flex-start',
 		// justifyContent: 'center',
 	},
 	title: {
