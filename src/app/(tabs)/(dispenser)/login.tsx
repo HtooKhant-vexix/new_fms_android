@@ -121,7 +121,7 @@ const LoginComponent = () => {
 		try {
 			// const data = await serialPort.read()
 
-      //for integer(32bit)
+			//for integer(32bit)
 			// const data = await readMultipleRegisters(704, 2)
 			// console.log('Data read from serial port:', data)
 			// const floatValue = convertFloat(data[0], data[1])
@@ -136,10 +136,10 @@ const LoginComponent = () => {
 					// stopListening() // Stop on error
 					break
 				}
-        // setTimeout(() => {
-        //   isListening = false
-        // }
-        // , 3000)
+				// setTimeout(() => {
+				//   isListening = false
+				// }
+				// , 3000)
 			}
 		} catch (error) {
 			console.error('Failed to read data:', error)

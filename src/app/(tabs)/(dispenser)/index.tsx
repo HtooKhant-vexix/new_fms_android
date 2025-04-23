@@ -4,6 +4,7 @@ import SetupWizard from '@/app/components/Setup'
 import { DevControl, nozConfig, Token } from '@/store/library'
 import { Buffer } from 'buffer'
 import { Redirect, usePathname } from 'expo-router'
+import Paho from 'paho-mqtt'
 import React, { useEffect, useRef, useState } from 'react'
 import { ImageBackground, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { Snackbar } from 'react-native-paper'
@@ -13,8 +14,51 @@ import backImg from '../../../../assets/bg.png'
 
 export default function DispenserScreen() {
 	const { setToken, items: token } = Token() as { setToken: (value: string) => void; items: string }
-	const { items: configNoz } = nozConfig()
+	const { items: configNoz, getConfig } = nozConfig()
 	const { getDev, dev, alert } = DevControl()
+	let client: any
+
+	let mqttClientRef = useRef<any>(null)
+
+	useEffect(() => {
+		client = new Paho.Client(
+			// "192.168.0.100",
+			'192.168.1.146',
+			// "192.168.1.165",
+			Number(9001), // this has to be a port using websockets
+			`android-${parseInt(Math.random() * 100)}`,
+		)
+
+		let mqtt_option = {
+			onSuccess: () => {
+				client.subscribe('detpos/device/#')
+				client.subscribe('detpos/local_server/#')
+				// setText("mqtt connected");
+				console.log('Mqtt from main is Connected')
+			},
+			onFailure: (err) => {
+				console.log(err, 'thi is eeero=oror')
+			},
+			userName: 'detpos',
+			password: 'asdffdsa',
+			useSSL: false,
+		}
+
+		client.connect(mqtt_option)
+		mqttClientRef.current = client
+		client.onMessageArrived = onMessage
+		// client.onConnectionLost = onConnectionLost
+
+		// console.log("this is from main");
+	}, [])
+
+	function onMessage(message) {
+		console.log(message, 'this is message from main reconnect')
+
+		// if (message.destinationName === 'detpos/device/price') {
+		// 	setPriceChange(true)
+		// }
+	}
 
 	const [visible, setVisible] = useState(false)
 	interface DispenserType {
@@ -28,6 +72,11 @@ export default function DispenserScreen() {
 		status: string
 	}
 
+	// useEffect(() => {
+	// 	getConfig()
+	// })
+
+	const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 	let isListening
 	// const nozAddr = addr.find((e) => e.number === noz).address
 	const nozAddr = 700
@@ -157,6 +206,7 @@ export default function DispenserScreen() {
 	}
 
 	useEffect(() => {
+		getConfig()
 		return () => stopListening()
 	}, [])
 
@@ -171,7 +221,7 @@ export default function DispenserScreen() {
 		setTimeout(() => {
 			isListeningRef.current = false
 			console.log('xxxxxxxxxxxxxxxxxxxxxxxxxxxx', isListeningRef.current)
-		}, 3000)
+		}, 10000)
 		let toggle = true
 		try {
 			while (isListeningRef.current) {
@@ -181,29 +231,30 @@ export default function DispenserScreen() {
 					// console.log(nozAddr)
 					if (address === 700) {
 						const data: any = await readMultipleRegisters(700 + 8, 1)
-						// setLiveData(data[0])
-						// setTPrice(data[0] * 100)
-						console.log('Data:...................................', toggle)
 						setFirstNozPrice(data[0] * 10)
 						setFirstNoz(data[0])
 					} else {
 						const data: any = await readMultipleRegisters(800 + 8, 1)
-						// const data = await readMultipleRegisters(Number(nozAddr) + 8, 1)
-						// setLiveData(data[0])
-						// setTPrice(data[0] * 100)
 						setSecNozPrice(data[0] * 10)
 						setSecNoz(data[0])
-						console.log('Data:...................................', toggle)
 					}
-					toggle = !toggle
-					// if (true) {
-					// 	// console.log('Data:', data)
 
-					// 	const data = await readMultipleRegisters(Number(nozAddr) + 8, 1)
-					// 	// setLiveData(data[0])
-					// 	// setTPrice(data[0] * 100)
-					// }
-					// setTPrice(data[0] * price)
+					if (mqttClientRef.current?.isConnected()) {
+						const payload = JSON.stringify({
+							address,
+							liter: 100,
+							price: 10 * 10,
+							timestamp: new Date().toISOString(),
+						})
+
+						// client.send(`detpos/device/data/${address}`, payload, 0, false)
+						console.log(`📤 MQTT sent to ${address}:`, payload)
+					} else {
+						console.warn('⚠️ MQTT not connected')
+					}
+
+					toggle = !toggle
+					await delay(500)
 				} catch (error) {
 					console.error('Error reading data:', error)
 					stopListening()
@@ -229,13 +280,7 @@ export default function DispenserScreen() {
 			nozzle?.number.padStart(2, '0'),
 		)
 
-	// console.log(dispensers.filter((dispenser) => filData?.includes(dispenser?.nozzle_no)))
-	// console.log(filData)
-
 	const nozData = dispensers.filter((dispenser) => filData?.includes(dispenser?.nozzle_no))
-	// console.log(configNoz && JSON.parse(configNoz)?.nozzleConfigs, 'hhhh')
-
-	// Show Snackbar if alert is triggered
 	useEffect(() => {
 		setVisible(!!alert)
 	}, [alert])
@@ -247,31 +292,14 @@ export default function DispenserScreen() {
 		}
 	}, [token])
 
-	console.log(firstNoz, 'firstNoz')
-	console.log(secNoz, 'secNoz')
+	// console.log(firstNoz, 'firstNoz')
+	// console.log(secNoz, 'secNoz')
 	// Update dispensers when dev data is received
 	useEffect(() => {
 		if (dev?.result) {
 			setDispensers(dev.result)
 		}
 	}, [dev])
-
-	// Load configuration from AsyncStorage
-	// useEffect(() => {
-	// 	const loadConfig = async () => {
-	// 		try {
-	// 			const configString = await AsyncStorage.getItem('fuelDispenserConfig')
-	// 			setConfig(configString ? configString : null)
-	// 		} catch (error) {
-	// 			console.error('Error loading config:', error)
-	// 		} finally {
-	// 			setLoadingConfig(false)
-	// 		}
-	// 	}
-	// 	loadConfig()
-	// 	// clearConfig()
-	// }, [])
-	// clearConfig()
 
 	// Redirect to login if token is missing
 	if (!token) {
@@ -284,7 +312,9 @@ export default function DispenserScreen() {
 	// }
 	const location = usePathname()
 
-	console.log(nozData, 'this is nozzle data')
+	console.log(mqttClientRef.current?.isConnected(), '......................')
+
+	// console.log(nozData, 'this is nozzle data')
 
 	return (
 		<SafeAreaView style={styles.container}>
@@ -305,10 +335,6 @@ export default function DispenserScreen() {
 							<Dispenser
 								click={() => {
 									read()
-									// setTimeout(() => {
-									// 	stopListening(),
-									// 		console.log('xxxxxxxxxxxxxxxxxxxxxxxxxxxx', isListeningRef.current)
-									// }, 3000)
 								}}
 								key={nozData[0]?._id}
 								noz={nozData[0]?.nozzle_no}
@@ -325,10 +351,6 @@ export default function DispenserScreen() {
 							<Dispenser
 								click={() => {
 									read()
-									// setTimeout(() => {
-									// 	stopListening(),
-									// 		console.log('xxxxxxxxxxxxxxxxxxxxxxxxxxxx', isListeningRef.current)
-									// }, 3000)
 								}}
 								key={nozData[1]?._id}
 								noz={nozData[1]?.nozzle_no}
