@@ -1,6 +1,7 @@
 import Dispenser from '@/app/components/Dispenser'
 import Header from '@/app/components/Header'
 import SetupWizard from '@/app/components/Setup'
+import { useGlobalState } from '@/store/globalState'
 import { DevControl, nozConfig, Token } from '@/store/library'
 import { Buffer } from 'buffer'
 import { Redirect, usePathname } from 'expo-router'
@@ -17,6 +18,9 @@ export default function DispenserScreen() {
 	const { items: configNoz, getConfig } = nozConfig()
 	const { getDev, dev, alert } = DevControl()
 	let client: any
+
+	const { state, dispatch } = useGlobalState()
+	console.log(state, 'this is state from dispenser')
 
 	let mqttClientRef = useRef<any>(null)
 
@@ -210,6 +214,14 @@ export default function DispenserScreen() {
 		return () => stopListening()
 	}, [])
 
+	useEffect(() => {
+		console.log('kjkjkjjjjjjjjjjjjjjjjjjjjjkkkkkkkkkkkkkkkkkkk', state?.nozzleActive)
+		// if (state?.nozzleActive) {
+		read()
+		console.log('hhhhhhhhhhhhhh')
+		// }
+	}, [state?.nozzleActive])
+
 	// const [toggle, setToggle] = React.useState(true)
 	const [firstNoz, setFirstNoz] = React.useState(0)
 	const [secNoz, setSecNoz] = React.useState(0)
@@ -233,28 +245,44 @@ export default function DispenserScreen() {
 						const data: any = await readMultipleRegisters(700 + 8, 1)
 						setFirstNozPrice(data[0] * 10)
 						setFirstNoz(data[0])
+						if (mqttClientRef.current?.isConnected()) {
+							// const payload = JSON.stringify({
+							// 	address,
+							// 	liter: data[0],
+							// 	price: data[0] * 10,
+							// 	timestamp: new Date().toISOString(),
+							// })
+
+							const payload = `${address}L${data[0]}P${data[0] * 10}`
+
+							mqttClientRef.current?.send(`detpos/device/livedata/`, payload, 0, false)
+							console.log(`📤 MQTT sent to ${address}:`, payload)
+						} else {
+							console.warn('⚠️ MQTT not connected')
+						}
 					} else {
 						const data: any = await readMultipleRegisters(800 + 8, 1)
 						setSecNozPrice(data[0] * 10)
 						setSecNoz(data[0])
-					}
+						if (mqttClientRef.current?.isConnected()) {
+							// const payload = JSON.stringify({
+							// 	address,
+							// 	liter: data[0],
+							// 	price: data[0] * 10,
+							// 	timestamp: new Date().toISOString(),
+							// })
 
-					if (mqttClientRef.current?.isConnected()) {
-						const payload = JSON.stringify({
-							address,
-							liter: 100,
-							price: 10 * 10,
-							timestamp: new Date().toISOString(),
-						})
+							const payload = `${address}L${data[0]}P${data[0] * 10}`
 
-						// client.send(`detpos/device/data/${address}`, payload, 0, false)
-						console.log(`📤 MQTT sent to ${address}:`, payload)
-					} else {
-						console.warn('⚠️ MQTT not connected')
+							mqttClientRef.current?.send(`detpos/device/data/`, payload, 0, false)
+							console.log(`📤 MQTT sent to ${address}:`, payload)
+						} else {
+							console.warn('⚠️ MQTT not connected')
+						}
 					}
 
 					toggle = !toggle
-					await delay(500)
+					await delay(200)
 				} catch (error) {
 					console.error('Error reading data:', error)
 					stopListening()
@@ -311,8 +339,6 @@ export default function DispenserScreen() {
 	// 	return <Redirect href="/(tabs)/setup" />
 	// }
 	const location = usePathname()
-
-	console.log(mqttClientRef.current?.isConnected(), '......................')
 
 	// console.log(nozData, 'this is nozzle data')
 

@@ -1,6 +1,10 @@
-import { router } from "expo-router"
-import { closeSerialPort, openSerialPort, writeMultipleRegisters, writeSingleRegister } from "./controlDispenser"
-
+import { router } from 'expo-router'
+import {
+	closeSerialPort,
+	openSerialPort,
+	writeMultipleRegisters,
+	writeSingleRegister,
+} from './controlDispenser'
 
 export const presetCommand = async (value) => {
 	const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -28,6 +32,7 @@ export const permitCommand = async () => {
 		console.log('clicked')
 	}
 }
+
 
 // let isListening = false // Control flag
 

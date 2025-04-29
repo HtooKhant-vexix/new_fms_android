@@ -1,5 +1,6 @@
 import { colors } from '@/constants/tokens'
 import { Buffer } from 'buffer'
+import { router } from 'expo-router'
 import React, { useEffect, useRef, useState } from 'react'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import SerialPortAPI, { SerialPort } from 'react-native-serial-port-api'
@@ -141,14 +142,14 @@ const Dispenser = ({ price, addr, click, noz, dis, title, description, saleLiter
 		<View style={styles.card}>
 			<TouchableOpacity
 				onPress={() => {
-					click()
-					// router.push('/(tabs)/(dispenser)/auth'),
-					// 	router.setParams({
-					// 		noz: noz,
-					// 		dis: dis,
-					// 		price: price,
-					// 		fuel: title,
-					// 	})
+					// click()
+					router.push('/(tabs)/(dispenser)/auth'),
+						router.setParams({
+							noz: noz,
+							dis: dis,
+							price: price,
+							fuel: title,
+						})
 				}}
 				style={styles.cardContent}
 			>

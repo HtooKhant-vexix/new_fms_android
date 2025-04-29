@@ -8,7 +8,7 @@ import { PaperProvider } from 'react-native-paper'
 import { Text, View } from 'react-native'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message'
-import Header from './components/Header'
+import { GlobalProvider } from '../store/globalState'
 // import TrackPlayer from 'react-native-track-player'
 // import '../styles/config.css'
 SplashScreen.preventAutoHideAsync()
@@ -86,19 +86,21 @@ const App = () => {
 	}
 
 	return (
-		<SafeAreaProvider>
-			<PaperProvider>
-				{/* <GestureHandlerRootView style={{ flex: 1 }}> */}
-				{/* {location == '/login' ? null : <Header />} */}
-				{/* <Header /> */}
-				{/* {config ? <RootNavigation /> : <SetupWizard />} */}
-				<RootNavigation />
-				{/* <SetupWizard /> */}
-				<StatusBar hidden />
-				<Toast position="bottom" bottomOffset={80} visibilityTime={2000} config={toastConfig} />
-			</PaperProvider>
-			{/* </GestureHandlerRootView> */}
-		</SafeAreaProvider>
+		<GlobalProvider>
+			<SafeAreaProvider>
+				<PaperProvider>
+					{/* <GestureHandlerRootView style={{ flex: 1 }}> */}
+					{/* {location == '/login' ? null : <Header />} */}
+					{/* <Header /> */}
+					{/* {config ? <RootNavigation /> : <SetupWizard />} */}
+					<RootNavigation />
+					{/* <SetupWizard /> */}
+					<StatusBar hidden />
+					<Toast position="bottom" bottomOffset={80} visibilityTime={2000} config={toastConfig} />
+				</PaperProvider>
+				{/* </GestureHandlerRootView> */}
+			</SafeAreaProvider>
+		</GlobalProvider>
 	)
 }
 

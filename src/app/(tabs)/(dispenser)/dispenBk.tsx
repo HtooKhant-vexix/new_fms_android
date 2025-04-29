@@ -6,7 +6,7 @@ import { ImageBackground, SafeAreaView, ScrollView, StyleSheet, View } from 'rea
 import backImg from '../../../../assets/bg.png'
 
 export default function DispenserScreen() {
-	const { setToken, items } = Token()
+	const {  items } = Token()
 
 	const dispensers = [
 		{
@@ -45,6 +45,12 @@ export default function DispenserScreen() {
 
 	const first = dispensers.map((dispenser) => (
 		<Dispenser
+			addr={dispenser?.id}
+			click={dispenser?.id}
+			noz={dispenser?.id}
+			dis={dispenser?.id}
+			saleLiter={dispenser?.id}
+			totalPrice
 			key={dispenser?.id}
 			title={dispenser?.title}
 			description={dispenser?.description}
@@ -70,12 +76,17 @@ export default function DispenserScreen() {
 					<View style={styles.grid}>
 						{dispensers.map((dispenser) => (
 							<Dispenser
+								addr={dispenser?.id}
+								click={dispenser?.id}
+								noz={dispenser?.id}
+								dis={dispenser?.id}
+								saleLiter={dispenser?.id}
+								totalPrice
 								key={dispenser?.id}
 								title={dispenser?.title}
 								description={dispenser?.description}
-								iconSource={dispenser?.iconSource}
+								// iconSource={dispenser?.iconSource}
 								price={dispenser?.price}
-								status={dispenser?.status}
 							/>
 						))}
 					</View>

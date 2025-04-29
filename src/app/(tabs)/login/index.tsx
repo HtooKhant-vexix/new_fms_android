@@ -188,6 +188,9 @@ const LoginComponent = () => {
 	)
 }
 
+// db2pet3
+// qGspaH1mzvKw
+
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,

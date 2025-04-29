@@ -4,6 +4,7 @@ import Input from '@/app/components/Input'
 import NumberKeyboard from '@/app/components/NumberKeyboard'
 import { closeSerialPort, openSerialPort, writeSingleRegister } from '@/command/controlDispenser'
 import { colors } from '@/constants/tokens'
+import { useGlobalState } from '@/store/globalState'
 import { DevControl } from '@/store/library'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useGlobalSearchParams, useLocalSearchParams } from 'expo-router'
@@ -13,7 +14,6 @@ import * as Keychain from 'react-native-keychain'
 import { ActivityIndicator, Modal, Portal } from 'react-native-paper'
 import tw from 'twrnc'
 import backImg from '../../../../assets/bg.png'
-import { permitCommand, presetCommand } from '../../../command/control'
 
 const index = () => {
 	const glob = useGlobalSearchParams()
@@ -134,7 +134,7 @@ const index = () => {
 		dataGet()
 	}, [])
 
-	console.log(glob, 'this is glob')
+	// console.log(glob, 'this is glob')
 
 	const literData = {
 		nozzleNo: glob?.noz,
@@ -223,7 +223,10 @@ const index = () => {
 
 	const showModal = () => setVisible(true)
 	const hideModal = () => setVisible(false)
-	// console.log(liter?.toFixed(2), 'this is liter')
+
+	const { state, dispatch } = useGlobalState()
+
+	// console.log(isDirectMode, 'this is liter')
 
 	return (
 		<SafeAreaView style={styles.container}>
@@ -257,14 +260,18 @@ const index = () => {
 							preset={
 								isDirectMode
 									? () => {
-											handlePreset(), presetCommand(Number(liter)?.toFixed(2))
+											handlePreset(),
+												// presetCommand(Number(liter)?.toFixed(2)),
+												dispatch({ type: 'NOZZLE_ACTIVE', payload: !state?.nozzleActive })
 										}
 									: handlePreset
 							}
 							start={
 								isDirectMode
 									? () => {
-											handleStart(), permitCommand()
+											handleStart(),
+												// permitCommand(),
+												dispatch({ type: 'NOZZLE_ACTIVE', payload: !state?.nozzleActive })
 										}
 									: handleStart
 							}
