@@ -1,9 +1,22 @@
 import { colors } from '@/constants/tokens'
 import { Ionicons } from '@expo/vector-icons'
-import React from 'react'
+import React, { memo } from 'react'
 import { Text, TouchableOpacity, View } from 'react-native'
 import tw from 'twrnc'
-const Voucher = ({ onClick, data }) => {
+interface VoucherProps {
+	onClick: (data: any) => void
+	data: {
+		vocono: string
+		saleLiter: number
+		salePrice: number
+		totalPrice: number
+		fuelType: string
+		dailyReportDate: string
+		createAt?: string
+	}
+}
+
+const Voucher = memo(({ onClick, data }: VoucherProps) => {
 	return (
 		<View style={tw`border border-[${colors.primary}] bg-white rounded-lg py-4 px-10`}>
 			<View style={tw`flex flex-row justify-between`}>
@@ -24,13 +37,13 @@ const Voucher = ({ onClick, data }) => {
 				</View>
 				<TouchableOpacity
 					onPress={() => onClick(data)}
-					style={tw`flex flex-row  items-center bg-blue-300 p-5 rounded-lg justify-center`}
+					style={tw`flex flex-row  items-center bg-[${colors.primary}] p-5 rounded-lg justify-center`}
 				>
 					<Ionicons name="print" size={32} style={tw`flex text-white`} />
 				</TouchableOpacity>
 			</View>
 		</View>
 	)
-}
+})
 
 export default Voucher

@@ -1,5 +1,4 @@
 import Header from '@/app/components/Header'
-import SetupWizard from '@/app/components/Setup'
 import Voucher from '@/app/components/Voucher'
 import { colors } from '@/constants/tokens'
 import { Token, useStore } from '@/store/library'
@@ -25,8 +24,13 @@ const Index = () => {
 	end.setSeconds(59)
 	end = new Date(end)
 
-	const { items, isLoading, error, fetchItems } = useStore()
-	const { items: token } = Token()
+	const { items, isLoading, error, fetchItems } = useStore() as {
+		items: any
+		isLoading: boolean
+		error: any
+		fetchItems: (route: string, token: string) => void
+	}
+	const { items: token } = Token() as { items: string }
 
 	const [name, setName] = React.useState('')
 	const [address, setAddress] = React.useState('')
@@ -39,9 +43,9 @@ const Index = () => {
 		try {
 			const dataGet = async () => {
 				const jsonValue = await AsyncStorage.getItem('info')
-				console.log(JSON.parse(jsonValue), 'this is json value')
+				// console.log(JSON.parse(jsonValue), 'this is json value')
 
-				const data = JSON.parse(jsonValue)
+				const data = jsonValue ? JSON.parse(jsonValue) : null
 
 				if (jsonValue) {
 					setName(data?.name)
@@ -70,7 +74,7 @@ const Index = () => {
 		fetchItems(route, token)
 	}, [fetchItems, route, token])
 
-	console.log(items,error?.response, 'this is token kkkkk')
+	console.log(items, error?.response, 'this is token kkkkk')
 
 	const [chg, setChg] = useState({ hex: '', text: '' })
 
@@ -110,7 +114,7 @@ const Index = () => {
   1D564100                                    // Cut paper
   `
 
-	const hexToString = (hex) => {
+	const hexToString = (hex: string) => {
 		let str = ''
 		for (let i = 0; i < hex.length; i += 2) {
 			const charCode = parseInt(hex.substr(i, 2), 16)
@@ -119,7 +123,7 @@ const Index = () => {
 		return str
 	}
 
-	const convertToHex = (str) => {
+	const convertToHex = (str: string) => {
 		let hex = ''
 		for (let i = 0; i < str.length; i++) {
 			hex += '' + str.charCodeAt(i).toString(16)
@@ -127,7 +131,21 @@ const Index = () => {
 		return hex
 	}
 
-	const sentBtn = async (data) => {
+	const sentBtn = async (data: {
+		dailyReportDate: { toString: () => any }
+		createAt: {
+			slice: (
+				arg0: number,
+				arg1: number,
+			) => { (): any; new (): any; toString: { (): any; new (): any } }
+		}
+		nozzleNo: any
+		vocono: any
+		salePrice: { toString: () => any }
+		saleLiter: { toString: () => any }
+		totalPrice: { toString: () => any }
+		fuelType: any
+	}) => {
 		try {
 			const serialPort = await SerialPortAPI.open('/dev/ttyS5', {
 				baudRate: 9600,
@@ -201,7 +219,6 @@ const Index = () => {
 			</View>
 		</>
 	)
-
 }
 
 export default Index

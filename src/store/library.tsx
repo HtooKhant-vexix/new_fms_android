@@ -141,7 +141,10 @@ const nozConfig = create((set) => ({
 		try {
 			await AsyncStorage.setItem('fuelDispenserConfig', JSON.stringify(config))
 			console.log('this is from library', JSON.stringify(config))
-			set({ items: JSON.stringify(config), isLoading: false })
+			set({
+				items: JSON.stringify(config),
+				isLoading: false,
+			})
 		} catch (error) {
 			set({ error, isLoading: false })
 		}
@@ -151,7 +154,10 @@ const nozConfig = create((set) => ({
 		set({ isLoading: true, error: null })
 		try {
 			const configString = await AsyncStorage.getItem('fuelDispenserConfig')
-			set({ items: configString, isLoading: false })
+			set({
+				items: configString,
+				isLoading: false,
+			})
 		} catch (error) {
 			set({ error, isLoading: false })
 		}

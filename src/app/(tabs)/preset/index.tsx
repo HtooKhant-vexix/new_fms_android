@@ -25,7 +25,23 @@ const index = () => {
 	const [type, setType] = useState<string>('')
 	const [isKeyboardVisible, setIsKeyboardVisible] = useState(false)
 
-	const { presetFun, error: e, dev, presetLoading, permitLoading, permitFun, alert } = DevControl()
+	const {
+		presetFun,
+		error: e,
+		dev,
+		presetLoading,
+		permitLoading,
+		permitFun,
+		alert,
+	} = DevControl() as {
+		presetFun: (route: string, priceData: any, token: string) => void
+		error: any
+		dev: any
+		presetLoading: boolean
+		permitLoading: boolean
+		permitFun: (route: string, permitObj: any, token: string) => void
+		alert: any
+	}
 
 	const handleKeyPressLiter = (key: string) => {
 		if (key === 'delete') {
@@ -104,7 +120,7 @@ const index = () => {
 		const dataGet = async () => {
 			try {
 				const jsonValue = await AsyncStorage.getItem('FnKey')
-				const data = JSON.parse(jsonValue)
+				const data = jsonValue ? JSON.parse(jsonValue) : null
 				if (jsonValue) {
 					setFunData(data)
 				} else {
@@ -245,6 +261,7 @@ const index = () => {
 							label="Price"
 							value={price}
 							setValue={setPrice}
+							style={undefined}
 						/>
 						<Input
 							label="Liter"
@@ -253,6 +270,7 @@ const index = () => {
 							}}
 							value={liter}
 							setValue={setLiter}
+							style={undefined}
 						/>
 					</View>
 					<View>

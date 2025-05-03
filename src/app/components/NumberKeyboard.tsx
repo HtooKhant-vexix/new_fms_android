@@ -6,6 +6,9 @@ interface NumberKeyboardProps {
 	isVisible: boolean
 	onKeyPress: (key: string) => void
 	onClose: () => void
+	literValue: string | number
+	priceValue: string | number
+	condi: string
 }
 
 const { width } = Dimensions.get('window')

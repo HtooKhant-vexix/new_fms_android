@@ -110,7 +110,12 @@ const LoginComponent = () => {
 
 	// console.log('Local:', local, 'Global:', glob)
 
-	const { items, isLoading, error, authPost } = Auth()
+	const { items, isLoading, error, authPost } = Auth() as {
+		items: any
+		isLoading: boolean
+		error: any
+		authPost: (url: string, body: any) => Promise<any>
+	}
 
 	const [receivedData, setReceivedData] = useState('')
 	const [location, setLocation] = useState<Location.LocationObject | null>(null)

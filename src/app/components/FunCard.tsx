@@ -3,7 +3,16 @@ import React, { useState } from 'react'
 import { Text, TouchableOpacity, View } from 'react-native'
 import tw from 'twrnc'
 
-const FunCard = ({ onClick, index, data, btn, setIndex, setField }) => {
+type FunCardProps = {
+	onClick: () => void
+	index: number
+	data: { liter: string; price: string }[]
+	btn: () => void
+	setIndex: (index: number) => void
+	setField: (field: string) => void
+}
+
+const FunCard: React.FC<FunCardProps> = ({ onClick, index, data, btn, setIndex, setField }) => {
 	const [liter, setLiter] = useState('3')
 	const [price, setPrice] = useState('3000')
 	const [isKeyboardVisible, setIsKeyboardVisible] = useState(false)
@@ -28,7 +37,6 @@ const FunCard = ({ onClick, index, data, btn, setIndex, setField }) => {
 
 	return (
 		<>
-		
 			<View style={tw`flex flex-row justify-center my-1 items-center gap-8`}>
 				<TouchableOpacity
 					// key={index}
