@@ -16,11 +16,13 @@ import backImg from '../../../../assets/bg.png'
 export default function DispenserScreen() {
 	const { setToken, items: token } = Token() as { setToken: (value: string) => void; items: string }
 	const { items: configNoz, getConfig } = nozConfig() as { items: string; getConfig: () => void }
+	console.log(configNoz, 'this is configNoz')
 	const { getDev, dev, alert } = DevControl() as {
 		getDev: (token: string) => void
 		dev: any
 		alert: boolean
 	}
+	console.log(token, 'thi')
 	const { state } = useGlobalState()
 	const mqttClientRef = useRef<Paho.Client | null>(null)
 
@@ -51,7 +53,7 @@ export default function DispenserScreen() {
 					onSuccess: () => {
 						client.subscribe('detpos/device/#')
 						client.subscribe('detpos/local_server/#')
-						console.log('MQTT Connected')
+						console.log('MQTT Connected', location)
 					},
 					onFailure: (err: any) => console.log('MQTT Error:', err),
 					userName: 'detpos',
@@ -69,17 +71,23 @@ export default function DispenserScreen() {
 				const now = Date.now()
 
 				// Debounce: Ignore messages received within 500ms of the last one
-				if (now - lastMessageTimestamp < 500) {
-					return
-				}
+				// if (now - lastMessageTimestamp < 500) {
+				// 	console.warn('Duplicate message ignored.')
+				// 	return
+				// }
 				lastMessageTimestamp = now
 				const topic = message.destinationName
 				console.log(topic, 'this is topic')
 
 				switch (topic) {
-					case 'detpos/device/1':
+					case 'detpos/local_server/1':
 						console.log('Triggering read operation...')
-						read()
+						// if (!isListeningRef.current) {
+						read() // Ensure `read()` is not already running
+						// } else {
+						// 	console.warn('Read operation already in progress.')
+						// }
+						// read()
 						break
 					case 'detpos/device/livedata/1':
 						const data = message.payloadString.split('L')
@@ -94,7 +102,7 @@ export default function DispenserScreen() {
 						// }
 						break
 					case 'detpos/local_server/dispensers':
-					case 'detpos/local_server/alert':
+						// case 'detpos/local_server/alert':
 						const payload = JSON.parse(message.payloadString)
 						if (payload?.status === 'success') {
 							if (topic === 'detpos/local_server/dispensers') {
@@ -112,6 +120,12 @@ export default function DispenserScreen() {
 		}
 
 		connect()
+		return () => {
+			if (mqttClientRef.current) {
+				mqttClientRef.current.disconnect()
+				console.log('MQTT Disconnected')
+			}
+		}
 	}, [])
 
 	useEffect(() => {
@@ -121,9 +135,9 @@ export default function DispenserScreen() {
 		}
 	}, [])
 
-	useEffect(() => {
-		if (state?.nozzleActive) read()
-	}, [state?.nozzleActive])
+	// useEffect(() => {
+	// 	if (state?.nozzleActive) read()
+	// }, [state?.nozzleActive])
 
 	useEffect(() => {
 		if (token) getDev(token)
@@ -212,6 +226,7 @@ export default function DispenserScreen() {
 			return // Prevent overlapping calls
 		}
 		isListeningRef.current = true
+		console.log(isListeningRef.current, 'this is listening')
 		try {
 			let toggle = true
 			const timeout = setTimeout(() => {
@@ -238,10 +253,10 @@ export default function DispenserScreen() {
 				}
 
 				toggle = !toggle
-				await delay(5)
+				await delay(500)
 			}
 			clearTimeout(timeout)
-		} catch {
+		} catch (error) {
 			console.error('Error during read operation:', error)
 		} finally {
 			isListeningRef.current = false // Reset the flag
@@ -267,6 +282,8 @@ export default function DispenserScreen() {
 		() => dispensers.filter((d: Nozzle) => filData?.includes(d?.nozzle_no)) as Nozzle[],
 		[dispensers],
 	)
+
+	console.log(nozData, 'this is nozData')
 
 	if (!token) return <Redirect href="/login" />
 

@@ -82,6 +82,7 @@ const DevControl = create((set) => ({
 					'Content-Type': 'multipart/form-data',
 				},
 			})
+			console.log(response.data, 'this is dev data')
 			set({ dev: response.data, isLoading: false })
 		} catch (error) {
 			set({ error, isLoading: false })

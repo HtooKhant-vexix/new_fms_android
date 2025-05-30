@@ -12,15 +12,7 @@ import { Token } from '@/store/library'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { router, usePathname } from 'expo-router'
 import React, { useEffect, useState } from 'react'
-import {
-	Image,
-	ImageBackground,
-	SafeAreaView,
-	StyleSheet,
-	Text,
-	TouchableOpacity,
-	View,
-} from 'react-native'
+import { Image, ImageBackground, SafeAreaView, StyleSheet, Text, View } from 'react-native'
 import tw from 'twrnc'
 import backImg from '../../../../assets/bg.png'
 
@@ -187,9 +179,9 @@ const LoginComponent = () => {
 							{/* <TouchableOpacity onPress={sendSerialData} style={styles.button}>
                 <Text style={styles.buttonText}>Send Serial Command</Text>
               </TouchableOpacity> */}
-							<TouchableOpacity onPress={() => read()} style={styles.button}>
+							{/* <TouchableOpacity onPress={() => read()} style={styles.button}>
 								<Text style={styles.buttonText}>Read Serial Data</Text>
-							</TouchableOpacity>
+							</TouchableOpacity> */}
 						</View>
 					</View>
 				</View>
