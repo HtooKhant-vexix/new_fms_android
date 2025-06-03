@@ -42,6 +42,7 @@ const DevControl = create((set) => ({
 					'Content-Type': 'multipart/form-data',
 				},
 			})
+			console.log(response, 'this is response')
 			set({ vou: response.data, presetLoading: false, alert: true })
 			router.push('/(tabs)/(dispenser)')
 			setTimeout(() => {

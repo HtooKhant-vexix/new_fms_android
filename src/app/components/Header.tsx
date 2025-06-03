@@ -2,11 +2,17 @@ import { colors } from '@/constants/tokens'
 import { Token, useStore } from '@/store/library'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { Link, router } from 'expo-router'
-import React from 'react'
+import React, { useCallback, useMemo } from 'react'
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import tw from 'twrnc'
 
-const Route = [
+interface RouteItem {
+	name: string
+	icon: keyof typeof Ionicons.glyphMap
+	route: string
+}
+
+const ROUTES: RouteItem[] = [
 	{
 		name: 'Home',
 		icon: 'home',
@@ -35,56 +41,79 @@ const data = {
 	voucher: '23/sdfsfsafsf/333',
 }
 
-let start = new Date()
-start.setHours(0)
-start.setMinutes(0)
-start.setSeconds(0)
-start = new Date(start)
-
-let end = new Date()
-end.setHours(23)
-end.setMinutes(59)
-end.setSeconds(59)
-end = new Date(end)
-
-const Header = () => {
+const Header: React.FC = () => {
 	const { items, isLoading, error, fetchItems } = useStore()
 	const { items: token } = Token()
 
-	const route = `detail-sale/pagi/by-date/1?sDate=${start}&eDate=${end}`
+	const dateRange = useMemo(() => {
+		const start = new Date()
+		start.setHours(0, 0, 0, 0)
 
-	return (
-		<View style={styles.header}>
+		const end = new Date()
+		end.setHours(23, 59, 59, 999)
+
+		return { start, end }
+	}, [])
+
+	const route = useMemo(
+		() => `detail-sale/pagi/by-date/1?sDate=${dateRange.start}&eDate=${dateRange.end}`,
+		[dateRange],
+	)
+
+	const handleRoutePress = useCallback(
+		(routeItem: RouteItem) => {
+			router.push(routeItem.route)
+			if (routeItem.name === 'Voucher') {
+				fetchItems(route, token)
+			}
+		},
+		[fetchItems, route, token],
+	)
+
+	const renderLogo = useCallback(
+		() => (
 			<Link href="/(tabs)/authen">
 				<View style={tw`flex flex-row items-center gap-2`}>
 					<Image
-						source={require('../../../assets/six_logo.png')} // Replace with your logo
+						source={require('../../../assets/six_logo.png')}
 						style={styles.logo}
+						accessibilityLabel="Sixth Kendra Logo"
 					/>
 					<Text style={tw`text-[45px] ml-[-30px] font-bold text-[${colors.primary}]`}>
 						Sixth Kendra
 					</Text>
 				</View>
 			</Link>
+		),
+		[],
+	)
+
+	const renderNavigationButtons = useCallback(
+		() => (
 			<View style={styles.headerIcons}>
-				{Route.map((e) => (
+				{ROUTES.map((routeItem) => (
 					<TouchableOpacity
-						key={e.name}
-						onPress={() => {
-							router.push(e?.route)
-							if (e.name === 'Voucher') {
-								fetchItems(route, token)
-							}
-						}}
+						key={routeItem.name}
+						onPress={() => handleRoutePress(routeItem)}
 						style={tw`bg-[${colors.primary}] px-6 flex flex-row justify-around items-center py-3 gap-2 rounded-md`}
+						accessibilityRole="button"
+						accessibilityLabel={`Navigate to ${routeItem.name}`}
 					>
-						<Ionicons name={e?.icon} size={32} style={tw`flex text-white`} />
+						<Ionicons name={routeItem.icon} size={32} style={tw`flex text-white`} />
 						<View>
-							<Text style={tw`text-white text-xl`}>{e?.name}</Text>
+							<Text style={tw`text-white text-xl`}>{routeItem.name}</Text>
 						</View>
 					</TouchableOpacity>
 				))}
 			</View>
+		),
+		[handleRoutePress],
+	)
+
+	return (
+		<View style={styles.header}>
+			{renderLogo()}
+			{renderNavigationButtons()}
 		</View>
 	)
 }
@@ -103,6 +132,7 @@ const styles = StyleSheet.create({
 		borderBottomWidth: 1,
 		borderBottomColor: '#e0e0e0',
 		height: 90,
+		backgroundColor: '#ffffff',
 	},
 	logo: {
 		width: 140,

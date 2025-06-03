@@ -6,10 +6,9 @@ import { View } from 'react-native'
 
 const DispenserLayout = () => {
 	const { getConfig } = nozConfig()
-	useEffect(()=>{
+	useEffect(() => {
 		getConfig()
-	}
-	,[])
+	}, [])
 	// const { setToken, items } = Token()
 
 	// const getToken = async () => {

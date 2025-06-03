@@ -1,36 +1,36 @@
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import React, { useState } from 'react'
 import { Text, View } from 'react-native'
 import { Button, TextInput } from 'react-native-paper'
+import Toast from 'react-native-toast-message'
 import tw from 'twrnc'
 import { colors } from '../../../constants/tokens'
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import Toast from 'react-native-toast-message'
 
-const Input = ({e}) => {
+const Input = ({ e }) => {
 	const [noz, setNoz] = useState()
-    // console.log(e, '.....')
+	// console.log(e, '.....')
 
-        const storeFun = async (value) => {
-            try {
-                const jsonValue = JSON.stringify(value)
-                await AsyncStorage.setItem('info', jsonValue)
-                Toast.show({
-                    type: 'success',
-                    text1: 'Saved Successfully!',
-                    text2: 'Data has been saved successfully.',
-                    // position: 'bottom',
-                })
-                console.log('stored')
-            } catch (e) {
-                Toast.show({
-                    type: 'error',
-                    text1: 'Something was wrong!',
-                    text2: 'Data has not been saved successfully.',
-                    // position: 'bottom',
-                })
-                console.log(e, 'this is error')
-            }
-        }
+	const storeFun = async (value) => {
+		try {
+			const jsonValue = JSON.stringify(value)
+			await AsyncStorage.setItem('info', jsonValue)
+			Toast.show({
+				type: 'success',
+				text1: 'Saved Successfully!',
+				text2: 'Data has been saved successfully.',
+				// position: 'bottom',
+			})
+			console.log('stored')
+		} catch (e) {
+			Toast.show({
+				type: 'error',
+				text1: 'Something was wrong!',
+				text2: 'Data has not been saved successfully.',
+				// position: 'bottom',
+			})
+			console.log(e, 'this is error')
+		}
+	}
 
 	return (
 		<View style={tw`w-[45%]`}>
@@ -46,7 +46,7 @@ const Input = ({e}) => {
 				/>
 			</View>
 			<Button
-				// icon="camera"    
+				// icon="camera"
 				// loading={true}
 				buttonColor={colors.primary}
 				mode="contained"

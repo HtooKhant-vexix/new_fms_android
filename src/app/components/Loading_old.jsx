@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Button, Modal, PaperProvider, Portal, Text } from 'react-native-paper'
 
-const Loading = () => {
+const Loading_old = () => {
 	const [visible, setVisible] = React.useState(false)
 
 	const showModal = () => setVisible(true)
@@ -22,4 +22,4 @@ const Loading = () => {
 	)
 }
 
-export default Loading
+export default Loading_old

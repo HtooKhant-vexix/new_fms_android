@@ -1,13 +1,13 @@
-import { View, Text } from 'react-native'
-import React from 'react'
 import SetupWizard from '@/app/components/Setup'
+import React from 'react'
+import { View } from 'react-native'
 
-const index = () => {
-  return (
-    <>
-        <SetupWizard/>
-    </>
-  )
+const SetupScreen: React.FC = () => {
+	return (
+		<View style={{ flex: 1 }}>
+			<SetupWizard />
+		</View>
+	)
 }
 
-export default index
+export default SetupScreen

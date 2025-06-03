@@ -176,6 +176,8 @@ const index = () => {
 		cusCardId: '-',
 	}
 
+	console.log(e, 'this is error')
+
 	const handlePreset = () => {
 		const route = `detail-sale/preset?depNo=${glob?.dis}&nozzleNo=${glob?.noz}`
 		presetFun(route, priceData, token)
