@@ -12,18 +12,27 @@ import { Token } from '@/store/library'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { router, usePathname } from 'expo-router'
 import React, { useEffect, useState } from 'react'
-import { Image, ImageBackground, SafeAreaView, StyleSheet, Text, View } from 'react-native'
+import {
+	Image,
+	ImageBackground,
+	SafeAreaView,
+	StyleSheet,
+	Text,
+	TouchableOpacity,
+	View,
+} from 'react-native'
+import SerialPortAPI, { SerialPort } from 'react-native-serial-port-api'
 import tw from 'twrnc'
 import backImg from '../../../../assets/bg.png'
 
 const LoginComponent = () => {
-	const { setToken } = Token()
-	const [serialPort, setSerialPort] = useState(null)
+	const { setToken } = Token() as { setToken: (token: string) => void }
+	const [serialPort, setSerialPort] = useState<SerialPort | null>(null)
 	const test = usePathname()
 
 	// openSerialPort()
 
-	const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+	const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 	const setupSerial = async () => {
 		try {
@@ -44,7 +53,7 @@ const LoginComponent = () => {
 		}
 	}
 
-	const handleRFIDScan = (data) => {
+	const handleRFIDScan = (data: string) => {
 		console.log('Scanned RFID:', data)
 		if (data) {
 			const body = { cardId: data.trim() }
@@ -81,16 +90,12 @@ const LoginComponent = () => {
 		}
 	}
 
-	const [config, setConfig] = useState()
+	const [config, setConfig] = useState<string | undefined>()
 	useEffect(() => {
 		const loadConfig = async () => {
 			try {
 				const configString = await AsyncStorage.getItem('fuelDispenserConfig')
 				console.log(configString, '..')
-
-				// if (!configString) {
-				// 	return <Redirect href="/(tabs)/setup" />
-				// }
 
 				if (configString) {
 					setConfig(configString)
@@ -102,9 +107,16 @@ const LoginComponent = () => {
 				throw error
 			}
 		}
-		loadConfig()
 
-		// clearConfig()
+		const initSerial = async () => {
+			const port = await SerialPortAPI.open('/dev/ttyS8', {
+				baudRate: 9600,
+			})
+			port && setSerialPort(port)
+		}
+
+		loadConfig()
+		initSerial()
 	}, [])
 	console.log(config, 'this is config')
 	let isListening = false
@@ -176,9 +188,9 @@ const LoginComponent = () => {
 								</Text>
 								<HiddenRFIDInput onRFIDScan={handleRFIDScan} />
 							</View>
-							{/* <TouchableOpacity onPress={sendSerialData} style={styles.button}>
-                <Text style={styles.buttonText}>Send Serial Command</Text>
-              </TouchableOpacity> */}
+							<TouchableOpacity onPress={sendSerialData} style={styles.button}>
+								<Text style={styles.buttonText}>Send Serial Command</Text>
+							</TouchableOpacity>
 							{/* <TouchableOpacity onPress={() => read()} style={styles.button}>
 								<Text style={styles.buttonText}>Read Serial Data</Text>
 							</TouchableOpacity> */}

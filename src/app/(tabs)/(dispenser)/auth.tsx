@@ -253,8 +253,8 @@ const AuthComponent = () => {
 								</TouchableOpacity>
 								{/* <TouchableOpacity onPress={sendSerialData} style={styles.button}>
 									<Text style={styles.buttonText}>Send Serial Command</Text>
-								</TouchableOpacity>
-								<TouchableOpacity onPress={() => presetCommand(14.14)} style={styles.button}>
+								</TouchableOpacity> */}
+								{/* <TouchableOpacity onPress={() => presetCommand(14.14)} style={styles.button}>
 									<Text style={styles.buttonText}>Send Serial Command</Text>
 								</TouchableOpacity> */}
 							</View>

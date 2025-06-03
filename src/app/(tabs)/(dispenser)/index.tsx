@@ -4,7 +4,7 @@ import SetupWizard from '@/app/components/Setup'
 import { useGlobalState } from '@/store/globalState'
 import { DevControl, nozConfig, Token } from '@/store/library'
 import { Buffer } from 'buffer'
-import { Redirect, usePathname } from 'expo-router'
+import { Redirect } from 'expo-router'
 import Paho from 'paho-mqtt'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ImageBackground, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native'
@@ -28,21 +28,45 @@ interface MQTTMessage {
 }
 
 interface SerialPortConfig {
-	portName?: string
-	baudRate?: number
+	portName: string
+	baudRate: number
 }
 
-const MQTT_CONFIG = {
+interface MQTTConfig {
+	host: string
+	port: number
+	username: string
+	password: string
+	useSSL: boolean
+	clientId: string
+}
+
+interface DispenserData {
+	liter: number
+	price: number
+	isPolling: boolean
+	lastUpdate: number
+}
+
+const MQTT_CONFIG: MQTTConfig = {
 	host: '192.168.1.124',
 	port: 9001,
 	username: 'detpos',
 	password: 'asdffdsa',
 	useSSL: false,
+	clientId: `android-${Math.floor(Math.random() * 1000000)}`,
 }
 
 const SERIAL_PORT_CONFIG: SerialPortConfig = {
 	portName: '/dev/ttyS8',
 	baudRate: 9600,
+}
+
+const TIMEOUT_DURATION = 10000
+const POLLING_INTERVAL = 2000 // 2 seconds polling interval
+const NOZZLE_ADDRESSES = {
+	NOZZLE_1: 700,
+	NOZZLE_2: 800,
 }
 
 export default function DispenserScreen() {
@@ -59,42 +83,48 @@ export default function DispenserScreen() {
 
 	const [visible, setVisible] = useState(false)
 	const [dispensers, setDispensers] = useState<Nozzle[]>([])
-	const [firstNoz, setFirstNoz] = useState(0)
-	const [secNoz, setSecNoz] = useState(0)
-	const [firstNozPrice, setFirstNozPrice] = useState(0)
-	const [secNozPrice, setSecNozPrice] = useState(0)
-	const isListeningRef = useRef(false)
+	const [dispenserData, setDispenserData] = useState<{ [key: number]: DispenserData }>({
+		[NOZZLE_ADDRESSES.NOZZLE_1]: { liter: 0, price: 0, isPolling: false, lastUpdate: 0 },
+		[NOZZLE_ADDRESSES.NOZZLE_2]: { liter: 0, price: 0, isPolling: false, lastUpdate: 0 },
+	})
+	const pollingRefs = useRef<{ [key: number]: NodeJS.Timeout | null }>({
+		[NOZZLE_ADDRESSES.NOZZLE_1]: null,
+		[NOZZLE_ADDRESSES.NOZZLE_2]: null,
+	})
 
-	const openSerialPort = useCallback(
-		async (
-			portName = SERIAL_PORT_CONFIG.portName || '/dev/ttyS8',
-			baudRate = SERIAL_PORT_CONFIG.baudRate || 9600,
-		) => {
-			try {
-				serialPortRef.current = await SerialPortAPI.open(portName, { baudRate })
-				return true
-			} catch (error) {
-				console.error('Serial Port Error:', error)
-				return false
-			}
-		},
-		[],
-	)
+	const [mqttConnected, setMqttConnected] = useState(false)
+	const mqttReconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-	const calculateCRC = useCallback((bytes: Buffer) => {
+	const openSerialPort = useCallback(async () => {
+		try {
+			serialPortRef.current = await SerialPortAPI.open(SERIAL_PORT_CONFIG.portName, {
+				baudRate: SERIAL_PORT_CONFIG.baudRate,
+			})
+			return true
+		} catch (error) {
+			console.error('Serial Port Error:', error)
+			return false
+		}
+	}, [])
+
+	const calculateCRC = useCallback((bytes: Buffer): Buffer => {
 		let crc = 0xffff
-		for (let byte of bytes) crc = crc16Update(crc, byte)
+		for (const byte of bytes) {
+			crc = crc16Update(crc, byte)
+		}
 		return Buffer.from([crc & 0xff, (crc >> 8) & 0xff])
 	}, [])
 
-	const crc16Update = useCallback((crc: number, a: number) => {
+	const crc16Update = useCallback((crc: number, a: number): number => {
 		crc ^= a
-		for (let i = 0; i < 8; ++i) crc = crc & 1 ? (crc >> 1) ^ 0xa001 : crc >> 1
+		for (let i = 0; i < 8; ++i) {
+			crc = crc & 1 ? (crc >> 1) ^ 0xa001 : crc >> 1
+		}
 		return crc & 0xffff
 	}, [])
 
 	const readMultipleRegisters = useCallback(
-		async (startRegister: number, numRegisters: number, sId = 1) => {
+		async (startRegister: number, numRegisters: number, sId = 1): Promise<number[] | null> => {
 			if (!serialPortRef.current && !(await openSerialPort())) return null
 
 			const packet = Buffer.from([
@@ -115,7 +145,8 @@ export default function DispenserScreen() {
 				serialPortRef.current?.onReceived((data: Uint8Array) => {
 					response = Buffer.concat([response, data])
 					if (response.length >= 3 + numRegisters * 2 + 2) {
-						resolve(parseResponse(response, sId, 0x03, numRegisters, startRegister))
+						const parsed = parseResponse(response, sId, 0x03, numRegisters, startRegister)
+						resolve(parsed ?? null)
 					}
 				})
 			})
@@ -130,13 +161,13 @@ export default function DispenserScreen() {
 			functionCode: number,
 			numRegisters: number,
 			startRegister: number,
-		) => {
+		): number[] | undefined => {
 			if (response[0] !== slaveId || response[1] !== functionCode) return
 			const byteCount = response[2]
 			if (byteCount !== numRegisters * 2) return
 
 			const data = response.slice(3, 3 + byteCount)
-			const registers = []
+			const registers: number[] = []
 			for (let i = 0; i < byteCount; i += 2) {
 				registers.push((data[i] << 8) | data[i + 1])
 			}
@@ -147,67 +178,130 @@ export default function DispenserScreen() {
 
 	const delay = useCallback((ms: number) => new Promise((res) => setTimeout(res, ms)), [])
 
-	const read = useCallback(async () => {
-		if (isListeningRef.current) {
-			console.warn('Read operation already in progress. Skipping...')
+	const updateDispenserData = useCallback((address: number, liter: number, price: number) => {
+		setDispenserData((prev) => ({
+			...prev,
+			[address]: {
+				...prev[address],
+				liter,
+				price,
+				lastUpdate: Date.now(),
+			},
+		}))
+	}, [])
+
+	const connectMQTT: () => Promise<void> = useCallback(async (): Promise<void> => {
+		if (mqttClientRef.current?.isConnected()) {
+			console.log('MQTT already connected')
 			return
 		}
-		isListeningRef.current = true
 
 		try {
-			let toggle = true
-			const timeout = setTimeout(() => {
-				isListeningRef.current = false
-				console.log('Read operation timed out.')
-			}, 10000)
+			if (mqttClientRef.current) {
+				mqttClientRef.current.disconnect()
+				mqttClientRef.current = null
+			}
 
-			while (isListeningRef.current) {
-				const address = toggle ? 700 : 800
-				const data = (await readMultipleRegisters(address + 8, 1)) as number[] | null
-				if (!data) break
+			const client = new Paho.Client(MQTT_CONFIG.host, MQTT_CONFIG.port, MQTT_CONFIG.clientId)
 
-				const liter = data ? data[0] : 0
+			client.onConnectionLost = (responseObject: { errorCode: number; errorMessage: string }) => {
+				if (responseObject.errorCode !== 0) {
+					console.log('MQTT Connection Lost:', responseObject.errorMessage)
+					setMqttConnected(false)
+					// Attempt to reconnect after 5 seconds
+					if (mqttReconnectTimeoutRef.current) {
+						clearTimeout(mqttReconnectTimeoutRef.current)
+					}
+					mqttReconnectTimeoutRef.current = setTimeout(() => {
+						void connectMQTT()
+					}, 5000)
+				}
+			}
+
+			client.onMessageArrived = handleMQTTMessage
+
+			await client.connect({
+				onSuccess: () => {
+					console.log('MQTT Connected')
+					setMqttConnected(true)
+					client.subscribe('detpos/device/#')
+					client.subscribe('detpos/local_server/#')
+				},
+				onFailure: (err: { errorCode: number; errorMessage: string }) => {
+					console.error('MQTT Connection Error:', err)
+					setMqttConnected(false)
+					// Attempt to reconnect after 5 seconds
+					if (mqttReconnectTimeoutRef.current) {
+						clearTimeout(mqttReconnectTimeoutRef.current)
+					}
+					mqttReconnectTimeoutRef.current = setTimeout(() => {
+						void connectMQTT()
+					}, 5000)
+				},
+				userName: MQTT_CONFIG.username,
+				password: MQTT_CONFIG.password,
+				useSSL: MQTT_CONFIG.useSSL,
+				keepAliveInterval: 60,
+				cleanSession: true,
+			})
+
+			mqttClientRef.current = client
+		} catch (error) {
+			console.error('MQTT Connection Error:', error)
+			setMqttConnected(false)
+			// Attempt to reconnect after 5 seconds
+			if (mqttReconnectTimeoutRef.current) {
+				clearTimeout(mqttReconnectTimeoutRef.current)
+			}
+			mqttReconnectTimeoutRef.current = setTimeout(() => {
+				void connectMQTT()
+			}, 5000)
+		}
+	}, [handleMQTTMessage])
+
+	const pollDispenser: (address: number) => Promise<void> = useCallback(
+		async (address: number): Promise<void> => {
+			try {
+				const data = await readMultipleRegisters(address + 8, 1)
+				if (!data) {
+					console.warn(`No data received for nozzle ${address}`)
+					return
+				}
+
+				const liter = data[0] || 0
 				const price = liter * 10
 				const payload = `${address}L${liter}P${price}`
+
+				console.log(`[Nozzle ${address}] Received data:`, { liter, price })
 
 				if (mqttClientRef.current?.isConnected()) {
 					const topic = 'detpos/device/livedata/1'
 					mqttClientRef.current.send(topic, payload, 0, false)
-					address === 700
-						? (setFirstNoz(liter), setFirstNozPrice(price))
-						: (setSecNoz(liter), setSecNozPrice(price))
+					updateDispenserData(address, liter, price)
+				} else {
+					console.warn('MQTT not connected, attempting to reconnect...')
+					void connectMQTT()
 				}
-
-				toggle = !toggle
-				await delay(1000)
+			} catch (error) {
+				console.error(`Error polling nozzle ${address}:`, error)
 			}
+		},
+		[readMultipleRegisters, updateDispenserData, connectMQTT],
+	)
 
-			clearTimeout(timeout)
-		} catch (error) {
-			console.error('Read operation error:', error)
-		} finally {
-			isListeningRef.current = false
-		}
-	}, [delay, readMultipleRegisters])
-
-	const stopListening = useCallback(() => {
-		isListeningRef.current = false
-	}, [])
-
-	const handleMQTTMessage = useCallback(
+	const handleMQTTMessage: (message: MQTTMessage) => void = useCallback(
 		(message: MQTTMessage) => {
 			const topic = message.destinationName
-			console.log(topic, 'this is topic')
 
 			switch (topic) {
 				case 'detpos/local_server/1':
-					console.log('Triggering read operation...')
-					read()
+					void pollDispenser(NOZZLE_ADDRESSES.NOZZLE_1)
+					void pollDispenser(NOZZLE_ADDRESSES.NOZZLE_2)
 					break
 				case 'detpos/device/livedata/1':
-					const data = message.payloadString.split('L')
-					const liter = parseInt(data[1].split('P')[0], 10)
-					const price = parseInt(data[1].split('P')[1], 10)
+					const [address, data] = message.payloadString.split('L')
+					const [liter, price] = data.split('P').map(Number)
+					updateDispenserData(Number(address), liter, price)
 					break
 				case 'detpos/local_server/dispensers':
 					const payload = JSON.parse(message.payloadString)
@@ -219,57 +313,80 @@ export default function DispenserScreen() {
 					console.log('Unknown topic:', topic)
 			}
 		},
-		[read],
+		[pollDispenser, updateDispenserData],
 	)
 
+	const startPolling = useCallback(
+		(address: number) => {
+			if (pollingRefs.current[address]) {
+				console.log(`Polling already active for nozzle ${address}`)
+				return
+			}
+
+			console.log(`Starting polling for nozzle ${address}`)
+			setDispenserData((prev) => ({
+				...prev,
+				[address]: { ...prev[address], isPolling: true },
+			}))
+
+			// Initial poll
+			pollDispenser(address)
+
+			// Set up interval
+			pollingRefs.current[address] = setInterval(() => {
+				pollDispenser(address)
+			}, POLLING_INTERVAL)
+		},
+		[pollDispenser],
+	)
+
+	const stopPolling = useCallback((address: number) => {
+		if (pollingRefs.current[address]) {
+			console.log(`Stopping polling for nozzle ${address}`)
+			clearInterval(pollingRefs.current[address])
+			pollingRefs.current[address] = null
+			setDispenserData((prev) => ({
+				...prev,
+				[address]: { ...prev[address], isPolling: false },
+			}))
+		}
+	}, [])
+
+	const togglePolling = useCallback(
+		(address: number) => {
+			const isCurrentlyPolling = pollingRefs.current[address] !== null
+			if (isCurrentlyPolling) {
+				stopPolling(address)
+			} else {
+				startPolling(address)
+			}
+		},
+		[startPolling, stopPolling],
+	)
+
+	// Cleanup on unmount
 	useEffect(() => {
-		const client = new Paho.Client(
-			MQTT_CONFIG.host,
-			MQTT_CONFIG.port,
-			`android-${Math.floor(Math.random() * 100)}`,
-		)
-
-		const connect = async () => {
-			if (mqttClientRef.current) {
-				mqttClientRef.current.disconnect()
-				console.log('MQTT Disconnected')
-			}
-
-			try {
-				await client.connect({
-					onSuccess: () => {
-						client.subscribe('detpos/device/#')
-						client.subscribe('detpos/local_server/#')
-						console.log('MQTT Connected')
-					},
-					onFailure: (err: any) => console.log('MQTT Error:', err),
-					userName: MQTT_CONFIG.username,
-					password: MQTT_CONFIG.password,
-					useSSL: MQTT_CONFIG.useSSL,
-				})
-			} catch (error) {
-				console.error('MQTT Connection Error:', error)
-			}
-
-			mqttClientRef.current = client
-			client.onMessageArrived = handleMQTTMessage
-		}
-
-		connect()
 		return () => {
-			if (mqttClientRef.current) {
-				mqttClientRef.current.disconnect()
-				console.log('MQTT Disconnected')
-			}
+			Object.keys(pollingRefs.current).forEach((address) => {
+				const ref = pollingRefs.current[Number(address)]
+				if (ref !== null) {
+					clearInterval(ref)
+				}
+			})
 		}
-	}, [handleMQTTMessage])
+	}, [])
 
 	useEffect(() => {
 		getConfig()
 		return () => {
-			stopListening()
+			Object.keys(pollingRefs.current).forEach((address) => {
+				const ref = pollingRefs.current[Number(address)]
+				if (ref !== null) {
+					clearInterval(ref)
+				}
+			})
 		}
-	}, [getConfig, stopListening])
+	}, [getConfig])
 
 	useEffect(() => {
 		if (token) getDev(token)
@@ -283,20 +400,36 @@ export default function DispenserScreen() {
 		setVisible(!!alert)
 	}, [alert])
 
-	const filData =
-		configNoz &&
-		JSON.parse(configNoz)?.nozzleConfigs?.map((n: { number: string }) => n.number.padStart(2, '0'))
+	// Initial MQTT connection
+	useEffect(() => {
+		void connectMQTT()
+
+		return () => {
+			if (mqttReconnectTimeoutRef.current) {
+				clearTimeout(mqttReconnectTimeoutRef.current)
+			}
+			if (mqttClientRef.current) {
+				mqttClientRef.current.disconnect()
+				mqttClientRef.current = null
+			}
+		}
+	}, [connectMQTT])
+
+	const filData = useMemo(
+		() =>
+			configNoz &&
+			JSON.parse(configNoz)?.nozzleConfigs?.map((n: { number: string }) =>
+				n.number.padStart(2, '0'),
+			),
+		[configNoz],
+	)
 
 	const nozData = useMemo(
 		() => dispensers.filter((d: Nozzle) => filData?.includes(d?.nozzle_no)) as Nozzle[],
-		[dispensers],
+		[dispensers, filData],
 	)
 
-	console.log(nozData, 'this is nozData')
-
 	if (!token) return <Redirect href="/login" />
-
-	const location = usePathname()
 
 	return (
 		<SafeAreaView style={styles.container}>
@@ -305,20 +438,23 @@ export default function DispenserScreen() {
 				{configNoz ? (
 					<ScrollView contentContainerStyle={styles.scrollContent}>
 						<View style={styles.grid}>
-							{nozData.slice(0, 2).map((noz, idx) => (
-								<Dispenser
-									key={noz?._id}
-									click={read}
-									noz={parseInt(noz?.nozzle_no || '0', 10)}
-									dis={noz?.dep_no}
-									title={noz?.fuel_type}
-									description={noz?.description}
-									price={noz?.daily_price}
-									saleLiter={idx === 0 ? firstNoz : secNoz}
-									totalPrice={idx === 0 ? firstNozPrice : secNozPrice}
-									addr={JSON.parse(configNoz)?.nozzleConfigs}
-								/>
-							))}
+							{nozData.slice(0, 2).map((noz, idx) => {
+								const address = idx === 0 ? NOZZLE_ADDRESSES.NOZZLE_1 : NOZZLE_ADDRESSES.NOZZLE_2
+								return (
+									<Dispenser
+										key={noz?._id}
+										click={() => togglePolling(address)}
+										noz={parseInt(noz?.nozzle_no || '0', 10)}
+										dis={noz?.dep_no}
+										title={noz?.fuel_type}
+										description={noz?.description}
+										price={noz?.daily_price}
+										saleLiter={dispenserData[address].liter}
+										totalPrice={dispenserData[address].price}
+										addr={JSON.parse(configNoz)?.nozzleConfigs}
+									/>
+								)
+							})}
 						</View>
 					</ScrollView>
 				) : (
